@@ -32,7 +32,7 @@ const PORTALS = Object.freeze({
     message: 'Return to the street?',
     confirm: 'YES, GO OUTSIDE',
     target: 'street',
-    spawn: Object.freeze({ x: -6.05, z: 14.7, yaw: -Math.PI / 2 }),
+    spawn: Object.freeze({ x: -5.95, z: 14.7, yaw: -Math.PI / 2 }),
   }),
   'house-exit': Object.freeze({
     title: 'LEAVE THE HOUSE?',

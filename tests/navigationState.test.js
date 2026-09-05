@@ -20,8 +20,20 @@ test('street buildings enter separate interior instances', () => {
 });
 
 test('interior exits return to their matching street entrances', () => {
-  assert.deepEqual(portalFor('shop-exit').spawn, { x: -6.05, z: 14.7, yaw: -Math.PI / 2 });
+  assert.deepEqual(portalFor('shop-exit').spawn, { x: -5.95, z: 14.7, yaw: -Math.PI / 2 });
   assert.deepEqual(portalFor('house-exit').spawn, { x: 5.5, z: 11.75, yaw: Math.PI / 2 });
+});
+
+test('street portal exits spawn inside bounds after accounting for player radius', () => {
+  const playerRadius = 0.28;
+  const bounds = boundsForLocation('street');
+  for (const id of ['shop-exit', 'house-exit']) {
+    const { spawn } = portalFor(id);
+    assert.ok(spawn.x >= bounds.minX + playerRadius, `${id} spawns left of the playable center bound`);
+    assert.ok(spawn.x <= bounds.maxX - playerRadius, `${id} spawns right of the playable center bound`);
+    assert.ok(spawn.z >= bounds.minZ + playerRadius, `${id} spawns before the playable center bound`);
+    assert.ok(spawn.z <= bounds.maxZ - playerRadius, `${id} spawns after the playable center bound`);
+  }
 });
 
 test('each location has finite movement bounds and unknown portals are rejected', () => {

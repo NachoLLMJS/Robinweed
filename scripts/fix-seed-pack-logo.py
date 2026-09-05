@@ -152,7 +152,7 @@ def main():
     if not npx:
         raise RuntimeError("npx was not found")
     subprocess.run(
-        [npx, "--yes", "@gltf-transform/cli", "copy", str(GLTF), str(OUTPUT)],
+        [npx, "--yes", "@gltf-transform/cli@4.5.0", "copy", str(GLTF), str(OUTPUT)],
         cwd=ROOT,
         check=True,
     )
