@@ -40,6 +40,16 @@ test('intersection stays clear of sidewalk strips and the crosswalk starts the s
   assert.match(source, /STREET_LAYOUT\.crossingZ/);
 });
 
+test('shrub planters stay out of the intersection roadway', () => {
+  const roadHalfWidth = 6.25;
+  const intersectionHalfDepth = 4.5;
+  for (const shrub of STREET_LAYOUT.shrubs) {
+    const insideIntersectionRoad = Math.abs(shrub.x) < roadHalfWidth
+      && Math.abs(shrub.z - STREET_LAYOUT.intersectionZ) < intersectionHalfDepth;
+    assert.equal(insideIntersectionRoad, false, `shrub at ${shrub.x},${shrub.z} blocks the intersection`);
+  }
+});
+
 test('grass patches do not overlap the transverse curbs', () => {
   const overlaps = (a, b) => (
     Math.abs(a.x - b.x) * 2 < a.width + b.width

@@ -33,7 +33,6 @@ export const STREET_LAYOUT = Object.freeze({
   shrubs: freezePoints([
     { x: -5.35, z: 9.7, rotationY: 0 },
     { x: 5.3, z: 23.6, rotationY: Math.PI },
-    { x: -5.3, z: 33.5, rotationY: 0 },
   ]),
   van: Object.freeze({ x: -2.72, z: 12, height: 2.25, rotationY: Math.PI / 2, speed: 2.4 }),
   vehicleRoute: freezePoints([
