@@ -144,7 +144,13 @@ boardGraphic.position.set(0,0,.07);boardFrame.add(boardGraphic);
 
 // Branded wall sign built from geometry/DOM-like canvas texture
 const labelCanvas=document.createElement('canvas'); labelCanvas.width=1024;labelCanvas.height=256;
-const ctx=labelCanvas.getContext('2d');ctx.fillStyle='#0b0f0a';ctx.fillRect(0,0,1024,256);ctx.fillStyle='#eef5e8';ctx.font='900 142px Arial';ctx.fillText('ROBIN',30,178);ctx.fillStyle='#9cff38';ctx.fillText('WEED',535,178);
+const ctx=labelCanvas.getContext('2d');
+const signLeft='STOCK';const signAccent='DEALER';const signGap=18;const signMaxWidth=964;
+ctx.fillStyle='#0b0f0a';ctx.fillRect(0,0,1024,256);
+let signFontSize=130;ctx.font=`900 ${signFontSize}px Arial`;
+let signLeftWidth=ctx.measureText(signLeft).width;let signAccentWidth=ctx.measureText(signAccent).width;let signTotalWidth=signLeftWidth+signGap+signAccentWidth;
+if(signTotalWidth>signMaxWidth){signFontSize*=signMaxWidth/signTotalWidth;ctx.font=`900 ${signFontSize}px Arial`;signLeftWidth=ctx.measureText(signLeft).width;signAccentWidth=ctx.measureText(signAccent).width;signTotalWidth=signLeftWidth+signGap+signAccentWidth;}
+const signX=(labelCanvas.width-signTotalWidth)/2;ctx.fillStyle='#eef5e8';ctx.fillText(signLeft,signX,175);ctx.fillStyle='#9cff38';ctx.fillText(signAccent,signX+signLeftWidth+signGap,175);
 const tex=new THREE.CanvasTexture(labelCanvas);tex.colorSpace=THREE.SRGBColorSpace;
 const sign=new THREE.Mesh(new THREE.PlaneGeometry(4.6,1.15),new THREE.MeshBasicMaterial({map:tex}));sign.position.set(-3.6,2.65,-7.83);scene.add(sign);
 
