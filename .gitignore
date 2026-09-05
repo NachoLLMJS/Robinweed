@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.vercel/
+review/
+scripts/__pycache__/
+meshy-task.json
+assets/meshy-tasks*/
+assets/references*/
+assets/meshy-originals*/
+.env
+.env.*
+!.env.example
