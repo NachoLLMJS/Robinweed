@@ -34,6 +34,19 @@ test('Railway example never contains a deployer key variable', () => {
 });
 
 test('deployment forces a fresh compile before reading artifacts', () => {
-  assert.match(deploy, /hardhat['"],\s*['"]compile['"],\s*['"]--force/);
+  assert.match(deploy, /process\.execPath/);
+  assert.match(deploy, /node_modules\/hardhat\/dist\/src\/cli\.js/);
+  assert.match(deploy, /['"]compile['"],\s*['"]--force/);
   assert.match(deploy, /await ensureFreshBuild\(\)/);
+});
+
+test('deployment requires the complete foundation gas budget before creating a journal or broadcasting', () => {
+  assert.match(deploy, /MIN_FOUNDATION_BALANCE_WEI/);
+  assert.match(deploy, /provider\.getBalance\(signer\.address\)/);
+  assert.match(deploy, /INSUFFICIENT_FOUNDATION_GAS_BUDGET/);
+  assert.ok(deploy.indexOf('INSUFFICIENT_FOUNDATION_GAS_BUDGET') < deploy.indexOf('await loadJournal()'));
+});
+
+test('deployment accepts an exact private key with or without the optional 0x prefix', () => {
+  assert.match(deploy, /\^\(\?:0x\)\?\[0-9a-fA-F\]\{64\}\$/);
 });

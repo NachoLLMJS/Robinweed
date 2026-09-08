@@ -14,7 +14,8 @@ The activation JSON contains public configuration but is kept external so incomp
 ## Phase 1 — foundation before token launch
 
 1. Review and compile the exact repository tree.
-2. Fill only the RPC, deployer key, expected deployer, Safe multisig, and confirmation gate in the external env.
+2. Fill only the RPC, deployer key, expected deployer, Safe multisig, confirmation gate, and the independently measured complete-sequence `MIN_FOUNDATION_BALANCE_WEI` in the external env.
+   The script checks that full balance before creating its journal or broadcasting transaction one.
 3. Run all tests and `npm audit`.
 4. Run `node scripts/deploy-robinhood-mainnet.js`.
 5. Verify `deployments/robinhood-mainnet-foundation.json`, receipts, addresses, code hashes, owner/pendingOwner and paused state.

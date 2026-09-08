@@ -15,7 +15,7 @@ const parseEnv=text=>Object.fromEntries(text.split(/\r?\n/).filter(line=>line&&!
 const tickerBytes=symbol=>`0x${Buffer.from(symbol).toString('hex').padEnd(64,'0')}`;
 const stable=value=>Array.isArray(value)?value.map(stable):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,stable(value[key])])):value;
 const executeFile=promisify(execFile);
-async function ensureFreshBuild(){await executeFile(process.platform==='win32'?'npx.cmd':'npx',['hardhat','compile','--force'],{cwd:resolve('.')});}
+async function ensureFreshBuild(){await executeFile(process.execPath,[resolve('node_modules/hardhat/dist/src/cli.js'),'compile','--force'],{cwd:resolve('.')});}
 async function artifact(source,name){return JSON.parse(await readFile(resolve(`artifacts/contracts/${source}.sol/${name}.json`),'utf8'));}
 async function atomicWrite(path,value){await mkdir(dirname(path),{recursive:true});const temporary=`${path}.tmp`;await writeFile(temporary,`${JSON.stringify(value,null,2)}\n`);await rename(temporary,path);}
 async function loadJournal(){if(!existsSync(JOURNAL))return{chainId:CHAIN_ID,steps:{},contracts:{},codeHashes:{},createdAt:new Date().toISOString()};const journal=JSON.parse(await readFile(JOURNAL,'utf8'));if(journal.chainId!==CHAIN_ID||!journal.steps||!journal.contracts)throw new Error('INVALID_FOUNDATION_JOURNAL');if(!journal.planDigest)throw new Error('FOUNDATION_JOURNAL_MISSING_PLAN_DIGEST');return journal;}
@@ -33,11 +33,12 @@ async function sendCall(context,label,address,abi,method,args){const contract=ne
 
 async function main(){
   const env=parseEnv(await readFile(process.env.STOCKDEALER_MAINNET_ENV??DEFAULT_ENV,'utf8'));
-  if(!/^0x?[0-9a-fA-F]{64}$/.test(env.DEPLOYER_PRIVATE_KEY??'')||!env.ROBINHOOD_MAINNET_RPC_URL)throw new Error('MISSING_DEPLOYMENT_CREDENTIALS');
+  if(!/^(?:0x)?[0-9a-fA-F]{64}$/.test(env.DEPLOYER_PRIVATE_KEY??'')||!env.ROBINHOOD_MAINNET_RPC_URL)throw new Error('MISSING_DEPLOYMENT_CREDENTIALS');
   await ensureFreshBuild();
   const admin=getAddress(env.ADMIN_MULTISIG_ADDRESS);const confirmations=Number(env.MIN_CONFIRMATIONS);if(!Number.isSafeInteger(confirmations)||confirmations<1)throw new Error('INVALID_CONFIRMATION_GATE');
+  if(!/^[1-9][0-9]*$/.test(env.MIN_FOUNDATION_BALANCE_WEI??''))throw new Error('INVALID_FOUNDATION_GAS_BUDGET');const minimumFoundationBalance=BigInt(env.MIN_FOUNDATION_BALANCE_WEI);
   const provider=new JsonRpcProvider(env.ROBINHOOD_MAINNET_RPC_URL,CHAIN_ID,{staticNetwork:true});const signer=new Wallet(env.DEPLOYER_PRIVATE_KEY.startsWith('0x')?env.DEPLOYER_PRIVATE_KEY:`0x${env.DEPLOYER_PRIVATE_KEY}`,provider);
-  if((await provider.getNetwork()).chainId!==4663n)throw new Error('WRONG_CHAIN');if(env.EXPECTED_DEPLOYER_ADDRESS&&signer.address!==getAddress(env.EXPECTED_DEPLOYER_ADDRESS))throw new Error('DEPLOYER_ADDRESS_MISMATCH');if((await provider.getCode(OFFICIAL_SWAP_ROUTER_02))==='0x')throw new Error('OFFICIAL_ROUTER_MISSING');for(const address of Object.values(STOCKS))if((await provider.getCode(address))==='0x')throw new Error(`CANONICAL_STOCK_MISSING:${address}`);
+  if((await provider.getNetwork()).chainId!==4663n)throw new Error('WRONG_CHAIN');if(env.EXPECTED_DEPLOYER_ADDRESS&&signer.address!==getAddress(env.EXPECTED_DEPLOYER_ADDRESS))throw new Error('DEPLOYER_ADDRESS_MISMATCH');if(await provider.getBalance(signer.address)<minimumFoundationBalance)throw new Error('INSUFFICIENT_FOUNDATION_GAS_BUDGET');if((await provider.getCode(OFFICIAL_SWAP_ROUTER_02))==='0x')throw new Error('OFFICIAL_ROUTER_MISSING');for(const address of Object.values(STOCKS))if((await provider.getCode(address))==='0x')throw new Error(`CANONICAL_STOCK_MISSING:${address}`);
   const routerArtifact=await artifact('StockdealerEconomyRouter','StockdealerEconomyRouter');const adapterArtifact=await artifact('StockdealerUniswapV3Adapter','StockdealerUniswapV3Adapter');const vaultArtifact=await artifact('StockdealerRewardVault','StockdealerRewardVault');const coreArtifact=await artifact('StockdealerGameCore','StockdealerGameCore');
   const planDigest=keccak256(toUtf8Bytes(JSON.stringify(stable({chainId:CHAIN_ID,signer:signer.address,admin,stocks:STOCKS,creationHashes:{router:keccak256(routerArtifact.bytecode),adapter:keccak256(adapterArtifact.bytecode),vault:keccak256(vaultArtifact.bytecode),core:keccak256(coreArtifact.bytecode)}}))));
   const journal=await loadJournal();if(journal.planDigest&&journal.planDigest!==planDigest)throw new Error('FOUNDATION_PLAN_MISMATCH');journal.planDigest=planDigest;await atomicWrite(JOURNAL,journal);const context={journal,signer,provider,confirmations};
