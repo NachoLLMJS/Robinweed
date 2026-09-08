@@ -21,6 +21,15 @@ const QUOTER = '0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7';
 
 const createProvider = config => new JsonRpcProvider(config.rpcPrimary, 4663, { staticNetwork: true, batchMaxCount: 10, batchStallTime: 10 });
 
+export function serializeRpcReads(operation) {
+  let tail = Promise.resolve();
+  return (...args) => {
+    const result = tail.then(() => operation(...args));
+    tail = result.catch(() => undefined);
+    return result;
+  };
+}
+
 function bindings(config) {
   if (config?.publicConfig?.economyActive !== true) return null;
   const byName = new Map((config.publicConfig.contracts ?? []).map(contract => [contract.name, contract.address]));
@@ -85,7 +94,12 @@ export function createReadGameStateService(config) {
   for (const symbol of ['AAPL', 'GOOGL', 'MSFT', 'MSTR', 'NVDA', 'QQQ', 'TSLA']) if (!byName.get(`Vault_${symbol}`)) return null;
   try { getAddress(byName.get('GameCore')); } catch { return null; }
   const propertyIds = Array.from({ length: 35 }, (_, index) => index + 1);
-  return async (address, { signal } = {}) => {
+  return serializeRpcReads(async (address, { signal } = {}) => {
+    if (signal?.aborted) {
+      const error = new Error('STATE_ABORTED');
+      error.code = 'ABORT_ERR';
+      throw error;
+    }
     const provider = createProvider(config);
     const gameCore = new Contract(getAddress(byName.get('GameCore')), GAME_CORE_READ_ABI, provider);
     const vaults = new Map();
@@ -98,5 +112,5 @@ export function createReadGameStateService(config) {
       return await readWalletGameState({ address, gameCore, propertyIds, vaults, blockTag: block.number, blockHash: block.hash });
     }
     finally { signal?.removeEventListener('abort', abort); provider.destroy(); }
-  };
+  });
 }

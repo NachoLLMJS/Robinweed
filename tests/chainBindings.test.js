@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createQuoteSeedService, createReadGameStateService } from '../server/chainBindings.js';
+import { createQuoteSeedService, createReadGameStateService, serializeRpcReads } from '../server/chainBindings.js';
 
 test('quote bindings stay absent while economy is inactive or required contracts are missing', () => {
   assert.equal(createQuoteSeedService({ publicConfig: { economyActive: false, contracts: [] } }), null);
@@ -23,4 +23,29 @@ test('read-only wallet state bindings remain available while purchases are pause
     publicConfig: { economyActive: false, contracts },
   });
   assert.equal(typeof service, 'function');
+});
+
+test('wallet state RPC reads are serialized so concurrent logins cannot flood the provider', async () => {
+  let active = 0;
+  let maxActive = 0;
+  const releases = [];
+  const read = serializeRpcReads(async value => {
+    active += 1;
+    maxActive = Math.max(maxActive, active);
+    await new Promise(resolve => releases.push(resolve));
+    active -= 1;
+    return value;
+  });
+
+  const results = [read('first'), read('second'), read('third')];
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(active, 1);
+  releases.shift()();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(active, 1);
+  releases.shift()();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  releases.shift()();
+  assert.deepEqual(await Promise.all(results), ['first', 'second', 'third']);
+  assert.equal(maxActive, 1);
 });
