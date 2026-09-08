@@ -30,10 +30,11 @@ export function createSerializedAuthenticator(authenticate = authenticateRealtim
 }
 
 export class MultiplayerClient {
-  constructor({ WebSocketImpl = WebSocket, onSnapshot = () => {}, onClose = () => {}, setTimeoutImpl = setTimeout, clearTimeoutImpl = clearTimeout } = {}) {
+  constructor({ WebSocketImpl = WebSocket, onSnapshot = () => {}, onClose = () => {}, onStatus = () => {}, setTimeoutImpl = setTimeout, clearTimeoutImpl = clearTimeout } = {}) {
     this.WebSocketImpl = WebSocketImpl;
     this.onSnapshot = onSnapshot;
     this.onClose = onClose;
+    this.onStatus = onStatus;
     this.setTimeoutImpl = setTimeoutImpl;
     this.clearTimeoutImpl = clearTimeoutImpl;
     this.clientSeq = 0;
@@ -50,6 +51,7 @@ export class MultiplayerClient {
     this.manualClosed = false;
     if (this.reconnectTimer !== null) this.clearTimeoutImpl(this.reconnectTimer);
     this.reconnectTimer = null;
+    this.onStatus({ state: 'connecting' });
     const url = new URL('/realtime', origin);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     const socket = new this.WebSocketImpl(url);
@@ -58,6 +60,7 @@ export class MultiplayerClient {
       if (this.socket !== socket) return;
       this.reconnectDelay = 500;
       this.serverSeq = -1;
+      this.onStatus({ state: 'socket-open' });
       socket.send(JSON.stringify({ type: 'join_world', worldId: 'outside' }));
     });
     socket.addEventListener('message', event => {
@@ -66,13 +69,14 @@ export class MultiplayerClient {
       try { message = JSON.parse(event.data); } catch { return; }
       if (message?.type !== 'snapshot' || message.worldVersion !== 1 || !Number.isSafeInteger(message.serverSeq) || message.serverSeq <= this.serverSeq || !Array.isArray(message.players) || message.players.length > 64) return;
       if (!message.players.every(player => typeof player?.userId === 'string' && /^[0-9a-f-]{36}$/i.test(player.userId) && /^0x[0-9a-f]{40}$/i.test(player.address) && Number.isFinite(player.x) && player.x >= -54 && player.x <= 54 && Number.isFinite(player.z) && player.z >= 8.65 && player.z <= 108.4 && Number.isFinite(player.yaw) && player.yaw >= -Math.PI && player.yaw <= Math.PI)) return;
-      this.serverSeq=message.serverSeq;this.onSnapshot(message);
+      this.serverSeq=message.serverSeq;this.onStatus({ state: 'online', players: message.players.length });this.onSnapshot(message);
     });
     socket.addEventListener('close', event => {
       if (this.socket !== socket) return;
       this.socket = null;
       const policyClose = event?.code === 1000 || event?.code === 1003 || event?.code === 1008 || event?.code >= 4000;
       const willReconnect = !this.manualClosed && !policyClose;
+      this.onStatus({ state: 'closed', code: event?.code ?? 0, willReconnect });
       this.onClose(event, { willReconnect });
       if (willReconnect && this.reconnectTimer === null) {
         const delay = this.reconnectDelay;

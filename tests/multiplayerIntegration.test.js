@@ -14,6 +14,9 @@ test('game authenticates multiplayer after wallet connection and renders outside
   assert.match(source, /PLAYER_SKINS/);
   assert.match(source, /group\.position\.set\(player\.x,\.02,player\.z\)/);
   assert.match(source, /ui\.onlinePlayers\.textContent=String\(snapshot\.players\.length\)/);
+  assert.match(source, /setMultiplayerStatus\('PRIVATE'\)/);
+  assert.match(source, /onStatus:/);
+  assert.match(source, /setMultiplayerStatus\('CONNECTING'\)/);
 });
 
 test('entering player mode requires wallet authentication and state loading before the loader closes', () => {
@@ -37,6 +40,6 @@ test('game sends multiplayer input only from the shared street at a bounded cade
   assert.match(source, /state\.location==='street'/);
   assert.match(source, /now-lastMultiplayerInputAt>=100/);
   assert.match(source, /multiplayerClient\.sendInput/);
-  assert.ok(source.indexOf('client.connect();multiplayerClient=client') > 0);
+  assert.ok(source.indexOf('multiplayerClient=client;client.connect()') > 0);
   assert.match(source, /catch\(error\)\{multiplayerClient=null/);
 });

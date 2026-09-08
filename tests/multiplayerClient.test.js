@@ -90,3 +90,17 @@ test('multiplayer accepts a restarted server sequence after reconnect', () => {
   client.connect('https://stockdealer.example');FakeSocket.instances[0].emit('open');FakeSocket.instances[0].emit('message',{data:JSON.stringify({type:'snapshot',worldVersion:1,serverSeq:100,players:[]})});FakeSocket.instances[0].emit('close',{code:1006});scheduled.shift()();FakeSocket.instances[1].emit('open');FakeSocket.instances[1].emit('message',{data:JSON.stringify({type:'snapshot',worldVersion:1,serverSeq:1,players:[]})});
   assert.deepEqual(snapshots,[100,1]);
 });
+
+test('multiplayer reports connecting, socket-open, online and close diagnostics', () => {
+  class FakeSocket { static OPEN=1; constructor(){this.listeners=new Map();} addEventListener(t,h){this.listeners.set(t,h);} send(){} close(){} emit(t,e={}){this.listeners.get(t)?.(e);} }
+  const statuses=[];
+  const client=new MultiplayerClient({WebSocketImpl:FakeSocket,onStatus:status=>statuses.push(status),setTimeoutImpl:()=>1,clearTimeoutImpl:()=>{}});
+  const socket=client.connect('https://stockdealer.example');
+  assert.deepEqual(statuses,[{state:'connecting'}]);
+  socket.emit('open');
+  assert.deepEqual(statuses.at(-1),{state:'socket-open'});
+  socket.emit('message',{data:JSON.stringify({type:'snapshot',worldVersion:1,serverSeq:1,players:[]})});
+  assert.deepEqual(statuses.at(-1),{state:'online',players:0});
+  socket.emit('close',{code:1006});
+  assert.deepEqual(statuses.at(-1),{state:'closed',code:1006,willReconnect:true});
+});

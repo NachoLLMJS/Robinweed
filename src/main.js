@@ -560,6 +560,7 @@ function loadLocalPlayerSkin(skin){
 const remotePlayers=new Map();
 let multiplayerClient=null,multiplayerConnecting=false,lastMultiplayerInputAt=0,multiplayerGeneration=0,authenticatedWallet=null,walletConnectionGeneration=0;
 const authenticateWalletSession=createSerializedAuthenticator();
+function setMultiplayerStatus(status){ui.onlinePlayers.textContent=status;}
 function makeRemotePlayer(address){
   const group=new THREE.Group();
   const fallback=new THREE.Group();group.add(fallback);
@@ -581,9 +582,10 @@ function onMultiplayerSnapshot(snapshot){
 }
 async function ensureAuthenticatedSession(wallet){if(authenticatedWallet?.toLowerCase()===wallet?.toLowerCase())return;if(state.walletAddress?.toLowerCase()!==wallet.toLowerCase())throw new Error('ACCOUNT_CHANGED_BEFORE_AUTH');await authenticateWalletSession({ethereum:globalThis.ethereum,account:wallet});if(state.walletAddress?.toLowerCase()!==wallet.toLowerCase())throw new Error('ACCOUNT_CHANGED_DURING_AUTH');authenticatedWallet=wallet;}
 async function syncMultiplayerLocation(){
-  if(state.location!=='street'||!state.walletAddress){multiplayerGeneration++;multiplayerClient?.close();multiplayerClient=null;ui.onlinePlayers.textContent='0';for(const group of remotePlayers.values())scene.remove(group);remotePlayers.clear();return;}
+  if(state.location!=='street'||!state.walletAddress){multiplayerGeneration++;multiplayerClient?.close();multiplayerClient=null;if(state.walletAddress)setMultiplayerStatus('PRIVATE');else setMultiplayerStatus('OFF');for(const group of remotePlayers.values())scene.remove(group);remotePlayers.clear();return;}
   if(multiplayerClient||multiplayerConnecting)return;multiplayerConnecting=true;const generation=++multiplayerGeneration,wallet=state.walletAddress;
-  try{await ensureAuthenticatedSession(wallet);if(generation!==multiplayerGeneration||state.location!=='street'||state.walletAddress?.toLowerCase()!==wallet.toLowerCase())return;const client=new MultiplayerClient({onSnapshot:onMultiplayerSnapshot,onClose:(_event,{willReconnect}={})=>{if(multiplayerClient!==client)return;if(!willReconnect)multiplayerClient=null;ui.onlinePlayers.textContent='0';for(const group of remotePlayers.values())scene.remove(group);remotePlayers.clear();}});client.connect();multiplayerClient=client;showToast('OUTSIDE MULTIPLAYER CONNECTED');}catch(error){multiplayerClient=null;console.warn('Stockdealer · outside multiplayer unavailable',error);}finally{multiplayerConnecting=false;}
+  setMultiplayerStatus('CONNECTING');
+  try{await ensureAuthenticatedSession(wallet);if(generation!==multiplayerGeneration||state.location!=='street'||state.walletAddress?.toLowerCase()!==wallet.toLowerCase())return;const client=new MultiplayerClient({onSnapshot:onMultiplayerSnapshot,onStatus:status=>{if(multiplayerClient!==client)return;if(status.state==='connecting')setMultiplayerStatus('CONNECTING');else if(status.state==='socket-open')setMultiplayerStatus('JOINING');else if(status.state==='online')setMultiplayerStatus(String(status.players));else if(status.state==='closed')setMultiplayerStatus(status.willReconnect?'RECONNECTING':`CLOSED ${status.code}`);},onClose:(_event,{willReconnect}={})=>{if(multiplayerClient!==client)return;if(!willReconnect)multiplayerClient=null;for(const group of remotePlayers.values())scene.remove(group);remotePlayers.clear();}});multiplayerClient=client;client.connect();}catch(error){multiplayerClient=null;setMultiplayerStatus('AUTH ERROR');console.warn('Stockdealer · outside multiplayer unavailable',error);}finally{multiplayerConnecting=false;}
 }
 
 // State and interaction
