@@ -15,9 +15,10 @@ test('Railway pins a Vite-compatible Node runtime and never repeats npm ci insid
   assert.doesNotMatch(railwayIndexer, /buildCommand = "[^"]*npm ci/);
 });
 
-test('Railway starts the production API/realtime process on injected PORT and all interfaces', () => {
+test('Railway starts the production API only after its idempotent database migration', () => {
   assert.equal(packageJson.scripts.start, 'node server/index.js');
-  assert.match(railway, /startCommand = "npm start"/);
+  assert.match(railway, /startCommand = "npm run db:migrate && npm start"/);
+  assert.doesNotMatch(railway, /preDeployCommand/);
   assert.match(server, /listen\(config\.port, '0\.0\.0\.0'/);
   assert.match(server, /SIGTERM/);
   assert.match(server, /\.\.\.OUTSIDE_SPAWN/);
