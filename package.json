@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Stockdealer — Robinhood Chain cultivation game with mainnet economy and multiplayer backend",
   "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "start": "node server/index.js",
     "start:indexer": "node server/indexer.js",
