@@ -2,6 +2,9 @@ node_modules/
 dist/
 .vercel/
 review/
+cache/
+artifacts/
+deployments/*.tmp
 scripts/__pycache__/
 meshy-task.json
 assets/meshy-tasks*/

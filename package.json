@@ -1,9 +1,12 @@
 {
   "name": "robinweed",
   "version": "1.0.0",
-  "description": "Robinweed — frontend-only first-person low-poly cultivation game prototype",
+  "description": "Stockdealer — Robinhood Chain cultivation game with mainnet economy and multiplayer backend",
   "type": "module",
   "scripts": {
+    "start": "node server/index.js",
+    "start:indexer": "node server/indexer.js",
+    "db:migrate": "node server/migrate.js",
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
@@ -13,9 +16,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "three": "^0.185.1"
+    "@openzeppelin/contracts": "^5.4.0",
+    "ethers": "^6.17.0",
+    "express": "^5.1.0",
+    "pg": "^8.16.3",
+    "siwe": "^3.0.0",
+    "three": "^0.185.1",
+    "ws": "^8.21.3",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^4.0.15",
+    "@nomicfoundation/hardhat-node-test-runner": "^3.1.0",
+    "hardhat": "^3.12.0",
+    "supertest": "^7.1.4",
     "vite": "^8.2.2"
   }
 }

@@ -4,62 +4,144 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#99ff2e" />
-    <meta name="description" content="Robinweed — a first-person low-poly cultivation game prototype for Robinhood Chain." />
-    <title>ROBINWEED</title>
+    <meta name="description" content="Stockdealer — a first-person low-poly cultivation game prototype for Robinhood Chain." />
+    <title>STOCKDEALER</title>
   </head>
   <body>
     <main id="game">
-      <canvas id="world" aria-label="Robinweed 3D game world"></canvas>
+      <canvas id="world" aria-label="Stockdealer 3D game world"></canvas>
       <section id="gate" class="gate">
-        <div class="gate-card">
-          <p class="eyebrow">ROBINHOOD CHAIN // FRONTEND BUILD 001</p>
-          <h1>ROBIN<span>WEED</span></h1>
-          <p class="lede">Grow the room. Work the route. Build your underground garden.</p>
-          <button id="play">ENTER THE GROW ROOM</button>
-          <div class="controls"><span>WASD</span> MOVE <span>MOUSE</span> LOOK <span>E</span> INTERACT <span>1–3</span> ITEMS <span>CLICK</span> USE</div>
+        <video id="loaderVideo" class="loader-video" src="/video/stockdealer-corridor-trailer.mp4" autoplay muted playsinline preload="auto" aria-label="Stockdealer corridor trailer"></video>
+        <div id="loaderActions" class="loader-actions hidden">
+          <h1>STOCK<span>DEALER</span></h1>
+          <div class="loader-buttons">
+            <button id="play">ENTER THE GAME</button>
+            <button id="spectate" class="secondary">SPECTATOR MODE</button>
+          </div>
+          <p class="loader-hint">SPECTATOR: WASD MOVE · MOUSE LOOK · SPACE UP · CTRL DOWN · SHIFT BOOST</p>
         </div>
       </section>
 
       <div id="hud" class="hidden">
         <header>
-          <div class="brand">ROBIN<span>WEED</span></div>
+          <div class="brand">STOCK<span>DEALER</span></div>
           <div class="chapter">GROW ROOM 01 <b>•</b> NIGHT SHIFT</div>
-          <button id="wallet">WALLET — NOT CONNECTED</button>
+          <div class="header-actions"><button id="wallet">WALLET — NOT CONNECTED</button></div>
         </header>
         <div class="objective"><small>CURRENT JOB</small><strong id="objective">Plant a seed in an empty pot</strong></div>
         <div id="prompt" class="prompt"></div>
         <div class="crosshair"><i></i></div>
         <div id="toast" class="toast"></div>
         <div class="stats">
-          <div><small>CASH</small><b id="cash">$120</b></div>
+          <div><small>$STOCKDEALER</small><b id="stockdealerBalance">—</b></div>
           <div><small>SEEDS</small><b id="seeds">4</b></div>
           <div><small>HARVEST</small><b id="buds">0</b></div>
         </div>
         <div class="hotbar">
           <button data-slot="0" class="active"><kbd>1</kbd><span class="can-icon">◒</span><small>WATERING CAN</small></button>
           <button data-slot="1"><kbd>2</kbd><span>✂</span><small>TRIMMERS</small></button>
-          <button data-slot="2"><kbd>3</kbd><span>◆</span><small>SEED BAG</small></button>
+          <button data-slot="2"><kbd>3</kbd><span class="stock-pack-icon" data-ticker="HOOD">HOOD</span><small>HOOD SEEDS</small></button>
+          <button data-slot="3"><kbd>4</kbd><span class="stock-pack-icon" data-ticker="MSFT">MSFT</span><small>MSFT SEEDS</small></button>
+          <button data-slot="4"><kbd>5</kbd><span class="stock-pack-icon" data-ticker="TSLA">TSLA</span><small>TSLA SEEDS</small></button>
+          <button data-slot="5"><kbd>6</kbd><span class="stock-pack-icon" data-ticker="NVDA">NVDA</span><small>NVDA SEEDS</small></button>
+          <button data-slot="6"><kbd>7</kbd><span class="stock-pack-icon" data-ticker="MSTR">MSTR</span><small>MSTR SEEDS</small></button>
+          <button data-slot="7"><kbd>8</kbd><span class="stock-pack-icon" data-ticker="AAPL">AAPL</span><small>AAPL SEEDS</small></button>
+          <button data-slot="8"><kbd>9</kbd><span class="stock-pack-icon" data-ticker="QQQ">QQQ</span><small>QQQ SEEDS</small></button>
+          <button data-slot="9"><kbd>0</kbd><span class="stock-pack-icon" data-ticker="GOOGL">GOOGL</span><small>GOOGL SEEDS</small></button>
         </div>
       </div>
 
-      <aside id="vendorPanel" class="panel hidden">
-        <button class="close" data-close>×</button>
-        <p class="eyebrow">BACK-ROOM SUPPLY</p>
-        <h2>VLAD TENEV'S<br><span>GROW SHOP</span></h2>
-        <div class="vendor-status">VLAD TENEV · VENDOR <i></i> OPEN</div>
-        <button id="buySeeds" class="deal"><span>SEED PACK ×3<small>starter inventory</small></span><b>$24</b></button>
-        <button id="sellBuds" class="deal"><span>SELL HARVEST<small>all current stock</small></span><b>$18 / EA</b></button>
-        <div class="chain-card"><small>FUTURE SETTLEMENT</small><strong>ROBINHOOD CHAIN</strong><p>Token and ETH settlement will activate only after verified contracts and funded vendor vaults exist.</p><button disabled>CLAIM ONCHAIN — UNAVAILABLE</button></div>
+      <aside id="vendorPanel" class="vendor-market hidden" aria-label="Vlad Tenev grow shop">
+        <button class="close" data-close aria-label="Close Vlad's shop">×</button>
+        <header class="vendor-market-head">
+          <div><p class="eyebrow">PRIVATE WAREHOUSE · SEED SUPPLY</p><h2>VLAD TENEV'S <span>GROW SHOP</span></h2></div>
+          <div class="vendor-status">VLAD TENEV · VENDOR <i></i> OPEN</div>
+        </header>
+        <div class="vendor-market-layout">
+          <section class="vendor-preview-card">
+            <div class="vendor-preview-stage"><canvas id="vendorPackPreview" aria-label="Selected seed package 3D preview"></canvas><span>LIVE GLB PREVIEW</span></div>
+            <div class="vendor-selected">
+              <small>SELECTED GENETIC</small>
+              <div><strong id="vendorSelectedTicker">HOOD</strong><b>4 SEEDS</b></div>
+              <p>One watering starts the growth clock. The plant advances one stage every 2 hours.</p>
+            </div>
+            <button id="equipSelectedSeed" class="vendor-equip">EQUIP PACKAGE FOR PLANTING</button>
+            <button id="buySelectedSeeds" class="vendor-buy" disabled>BUY 4 SEEDS · 100 $STOCKDEALER</button>
+            <div class="vendor-routing"><b>60% STOCK SWAP · 40% BURN</b><span id="vendorSwapRoute">60 $STOCKDEALER → HOOD REWARD RESERVE</span><small>Purchase disabled until token, router and funded reward vault are verified.</small></div>
+          </section>
+          <section class="vendor-catalog">
+            <div class="vendor-catalog-title"><span>CHOOSE A PACKAGE</span><small>8 PRODUCTION GLBs</small></div>
+            <div id="vendorSeedGrid" class="vendor-seed-grid"></div>
+            <div class="vendor-claim-card">
+              <div><small>HARVEST REWARDS</small><strong>TICKER-MATCHED STOCK CLAIMS</strong><p>Harvesting records the stock you planted. Claims settle from the tokenized-stock reward pool.</p></div>
+              <button id="claimHarvest" disabled>CLAIM STOCKS — ONCHAIN UNAVAILABLE</button>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <aside id="propertyPanel" class="property-panel hidden" aria-label="Neighborhood property">
+        <button class="close" data-close aria-label="Close property">×</button>
+        <p class="eyebrow">NEIGHBORHOOD PROPERTY</p>
+        <h2 id="propertyTitle">PROPERTY</h2>
+        <dl class="property-facts">
+          <div><dt>STATUS</dt><dd id="propertyStatus">AVAILABLE</dd></div>
+          <div><dt>PLANT STATIONS</dt><dd id="propertyCapacity">4</dd></div>
+          <div><dt>PURCHASE PRICE</dt><dd>TBA</dd></div>
+        </dl>
+        <div class="property-owner"><small>OWNER WALLET</small><strong id="propertyOwner">AVAILABLE — NO OWNER</strong></div>
+        <p id="propertyMessage">Connect a wallet to assign this property in the frontend preview.</p>
+        <button id="propertyAction">CONNECT WALLET TO BUY</button>
+        <small class="property-boundary">No token spend or onchain ownership occurs until property contracts and prices are configured.</small>
       </aside>
 
       <aside id="walletPanel" class="panel compact hidden">
         <button class="close" data-close>×</button>
         <p class="eyebrow">CHAIN TERMINAL</p>
-        <h2>FRONTEND<br><span>ONLY</span></h2>
-        <p>No wallet request or transaction will be sent in this build. Contract address, token and rewards vault are not configured.</p>
-        <dl><div><dt>NETWORK</dt><dd>Robinhood Chain</dd></div><div><dt>NATIVE ASSET</dt><dd>ETH</dd></div><div><dt>CONTRACTS</dt><dd>—</dd></div></dl>
-        <button disabled>CONNECT AFTER CONTRACT INTEGRATION</button>
+        <h2>WALLET<br><span>IDENTITY</span></h2>
+        <p>Connect only after a direct click. This identifies the player for the local property preview; it does not send a transaction.</p>
+        <dl><div><dt>NETWORK</dt><dd>Robinhood Chain</dd></div><div><dt>ADDRESS</dt><dd id="walletAddress">NOT CONNECTED</dd></div><div><dt>CONTRACTS</dt><dd>—</dd></div></dl>
+        <button id="connectWallet">CONNECT WALLET</button>
       </aside>
+
+      <section id="househeadQuestion" class="portal-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="househeadQuestionTitle">
+        <div class="portal-card househead-dialog-card">
+          <p class="eyebrow">MEADGod · TOKEN GUIDE</p>
+          <h2 id="househeadQuestionTitle">SWAP ETH FOR $STOCKDEALER?</h2>
+          <p>I can show you the ETH → $STOCKDEALER swap desk. This is an orientation preview only and will not send a transaction.</p>
+          <div class="portal-actions">
+            <button id="househeadYes">YES — SHOW SWAP</button>
+            <button id="househeadNo" class="secondary">NO</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="stockdealerSwap" class="swap-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="stockdealerSwapTitle">
+        <div class="swap-desk">
+          <button id="stockdealerSwapClose" class="close" aria-label="Close swap">×</button>
+          <header class="swap-heading">
+            <div><p class="eyebrow">MEADGod SWAP DESK</p><h2 id="stockdealerSwapTitle">SWAP <span>TOKENS</span></h2><p>Preview the route from ETH into $STOCKDEALER on Robinhood Chain</p></div>
+            <div class="swap-network"><i></i><span>ROBINHOOD<br><small>CHAIN</small></span></div>
+          </header>
+          <div class="swap-shell">
+            <div class="swap-shell-top"><strong>SWAP</strong><span>ORIENTATION MODE</span></div>
+            <div class="swap-token-box">
+              <div class="swap-box-label"><b>YOU PAY</b><span>BALANCE —</span></div>
+              <div class="swap-amount-row"><input id="swapEthAmount" inputmode="decimal" placeholder="0.00" aria-label="ETH amount" /><div class="token-chip"><i class="eth-token">E</i><span>ETH<small>ROBINHOOD</small></span></div></div>
+              <small>Enter an illustrative amount</small>
+            </div>
+            <div class="swap-arrow">↓</div>
+            <div class="swap-token-box">
+              <div class="swap-box-label"><b>YOU RECEIVE</b><span>PREVIEW ONLY</span></div>
+              <div class="swap-amount-row"><output id="swapStockdealerAmount">—</output><div class="token-chip"><i class="stock-token">S</i><span>$STOCKDEALER<small>ROBINHOOD</small></span></div></div>
+              <small>Quote unavailable until token contract and liquidity are configured</small>
+            </div>
+            <dl class="swap-route"><div><dt>ROUTE</dt><dd>ETH → $STOCKDEALER</dd></div><div><dt>MINIMUM RECEIVED</dt><dd>Quote required</dd></div><div><dt>NETWORK FEE</dt><dd>Calculated in wallet</dd></div></dl>
+            <button class="swap-disabled" disabled>ORIENTATION ONLY — SWAP UNAVAILABLE</button>
+            <p class="swap-safety"><i></i>No wallet request · No approval · No transaction</p>
+          </div>
+        </div>
+      </section>
 
       <section id="portalPanel" class="portal-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="portalTitle">
         <div class="portal-card">

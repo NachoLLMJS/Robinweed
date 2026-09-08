@@ -1,0 +1,232 @@
+{
+  "chainId": 4663,
+  "expectedTokenSymbol": "STOCKDEALER",
+  "tokenAddress": null,
+  "expectedTokenCodeHash": null,
+  "burnProbeHolder": null,
+  "seedPackPriceTokens": null,
+  "seedsPerPack": 4,
+  "houseBasket": [],
+  "paths": {
+    "AAPL": null,
+    "GOOGL": null,
+    "MSFT": null,
+    "MSTR": null,
+    "NVDA": null,
+    "QQQ": null,
+    "TSLA": null
+  },
+  "houses": [
+    {
+      "id": "START-WEST",
+      "onchainId": 1,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "START-EAST",
+      "onchainId": 2,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-001",
+      "onchainId": 3,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-002",
+      "onchainId": 4,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-003",
+      "onchainId": 5,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-004",
+      "onchainId": 6,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-005",
+      "onchainId": 7,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-006",
+      "onchainId": 8,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-007",
+      "onchainId": 9,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-008",
+      "onchainId": 10,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-009",
+      "onchainId": 11,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-010",
+      "onchainId": 12,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-011",
+      "onchainId": 13,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-012",
+      "onchainId": 14,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-013",
+      "onchainId": 15,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-014",
+      "onchainId": 16,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-015",
+      "onchainId": 17,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-016",
+      "onchainId": 18,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-017",
+      "onchainId": 19,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-018",
+      "onchainId": 20,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-019",
+      "onchainId": 21,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-020",
+      "onchainId": 22,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-021",
+      "onchainId": 23,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-022",
+      "onchainId": 24,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-023",
+      "onchainId": 25,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-024",
+      "onchainId": 26,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-025",
+      "onchainId": 27,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-026",
+      "onchainId": 28,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-027",
+      "onchainId": 29,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "HOME-028",
+      "onchainId": 30,
+      "capacity": 4,
+      "priceTokens": null
+    },
+    {
+      "id": "BLOCK-001",
+      "onchainId": 31,
+      "capacity": 15,
+      "priceTokens": null
+    },
+    {
+      "id": "BLOCK-002",
+      "onchainId": 32,
+      "capacity": 15,
+      "priceTokens": null
+    },
+    {
+      "id": "BLOCK-003",
+      "onchainId": 33,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "BLOCK-004",
+      "onchainId": 34,
+      "capacity": 8,
+      "priceTokens": null
+    },
+    {
+      "id": "BLOCK-005",
+      "onchainId": 35,
+      "capacity": 8,
+      "priceTokens": null
+    }
+  ],
+  "activateAfterValidation": false
+}

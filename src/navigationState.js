@@ -1,3 +1,10 @@
+export const INITIAL_PLAYER_SPAWN = Object.freeze({
+  location: 'warehouse',
+  x: 1.5,
+  z: -3.9,
+  yaw: -Math.PI / 2,
+});
+
 const PORTALS = Object.freeze({
   'warehouse-exit': Object.freeze({
     title: 'LEAVE THE WAREHOUSE?',
@@ -20,19 +27,20 @@ const PORTALS = Object.freeze({
     target: 'shop-interior',
     spawn: Object.freeze({ x: 0, z: -27.2, yaw: 0 }),
   }),
-  'house-entrance': Object.freeze({
-    title: 'ENTER THE HOUSE?',
-    message: 'Do you want to enter?',
+
+  'restaurant-entrance': Object.freeze({
+    title: 'ENTER THE RESTAURANT?',
+    message: 'Step inside for the evening service?',
     confirm: 'YES, ENTER',
-    target: 'house-interior',
-    spawn: Object.freeze({ x: 0, z: -45.2, yaw: 0 }),
+    target: 'restaurant-interior',
+    spawn: Object.freeze({ x: 0, z: -63, yaw: 0 }),
   }),
   'shop-exit': Object.freeze({
     title: 'LEAVE THE SHOP?',
     message: 'Return to the street?',
     confirm: 'YES, GO OUTSIDE',
     target: 'street',
-    spawn: Object.freeze({ x: -5.95, z: 14.7, yaw: -Math.PI / 2 }),
+    spawn: Object.freeze({ x: -5.95, z: 13.2, yaw: -Math.PI / 2 }),
   }),
   'house-exit': Object.freeze({
     title: 'LEAVE THE HOUSE?',
@@ -41,19 +49,29 @@ const PORTALS = Object.freeze({
     target: 'street',
     spawn: Object.freeze({ x: 5.5, z: 11.75, yaw: Math.PI / 2 }),
   }),
+  'restaurant-exit': Object.freeze({
+    title: 'LEAVE THE RESTAURANT?',
+    message: 'Return to the right neighborhood street?',
+    confirm: 'YES, GO OUTSIDE',
+    target: 'street',
+    spawn: Object.freeze({ x: 27.2, z: 38.65, yaw: Math.PI }),
+  }),
 });
 
 const LOCATION_BOUNDS = Object.freeze({
   warehouse: Object.freeze({ minX: -6.6, maxX: 6.6, minZ: -7.35, maxZ: 7.35 }),
-  street: Object.freeze({ minX: -6.25, maxX: 6.25, minZ: 8.65, maxZ: 42.4 }),
+  street: Object.freeze({ minX: -54, maxX: 54, minZ: 8.65, maxZ: 108.4 }),
   'shop-interior': Object.freeze({ minX: -4.35, maxX: 4.35, minZ: -34.35, maxZ: -25.65 }),
   'house-interior': Object.freeze({ minX: -4.35, maxX: 4.35, minZ: -52.35, maxZ: -43.65 }),
+  'restaurant-interior': Object.freeze({ minX: -11.5, maxX: 11.5, minZ: -98.5, maxZ: -61.5 }),
 });
 
 const CITY_BUILDINGS = Object.freeze({
   shop: Object.freeze({
     positionX: -8.3,
+    positionZ: 14.7,
     portalX: -6.48,
+    portalZ: 13.2,
     positionY: -0.08,
     // Exclude the door/facade projection from collision so the portal remains
     // reachable inside the narrow street bounds; the world bound prevents

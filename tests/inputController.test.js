@@ -2,6 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { InputController } from '../src/inputController.js';
 
+test('number hotkeys select all ten tool and stock-seed slots', () => {
+  const input = new InputController();
+  input.setGameplayEnabled(true);
+  const expected = [
+    ['Digit1', 0], ['Digit2', 1], ['Digit3', 2], ['Digit4', 3], ['Digit5', 4],
+    ['Digit6', 5], ['Digit7', 6], ['Digit8', 7], ['Digit9', 8], ['Digit0', 9],
+  ];
+  for (const [code, slot] of expected) {
+    assert.deepEqual(input.keyDown(code, false), [{ type: 'select-slot', slot }]);
+    input.keyUp(code);
+  }
+});
+
 test('one-shot tool changes never repeat while a key is held', () => {
   const input = new InputController();
   input.setGameplayEnabled(true);

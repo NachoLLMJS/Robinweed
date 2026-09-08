@@ -1,8 +1,18 @@
 const ONE_SHOT_KEYS = new Map([
-  ['Digit1', { type: 'select-slot', slot: 0 }],
-  ['Digit2', { type: 'select-slot', slot: 1 }],
-  ['Digit3', { type: 'select-slot', slot: 2 }],
   ['KeyE', { type: 'interact' }],
+]);
+
+const NUMERIC_SLOTS = new Map([
+  ['Digit1', 0], ['Numpad1', 0],
+  ['Digit2', 1], ['Numpad2', 1],
+  ['Digit3', 2], ['Numpad3', 2],
+  ['Digit4', 3], ['Numpad4', 3],
+  ['Digit5', 4], ['Numpad5', 4],
+  ['Digit6', 5], ['Numpad6', 5],
+  ['Digit7', 6], ['Numpad7', 6],
+  ['Digit8', 7], ['Numpad8', 7],
+  ['Digit9', 8], ['Numpad9', 8],
+  ['Digit0', 9], ['Numpad0', 9],
 ]);
 
 export class InputController {
@@ -19,7 +29,8 @@ export class InputController {
   keyDown(code, repeat = false) {
     if (!this.gameplayEnabled) return [];
     this.held.add(code);
-    const action = ONE_SHOT_KEYS.get(code);
+    const numericSlot = NUMERIC_SLOTS.get(code);
+    const action = numericSlot === undefined ? ONE_SHOT_KEYS.get(code) : { type: 'select-slot', slot: numericSlot };
     return action && !repeat ? [{ ...action }] : [];
   }
 
