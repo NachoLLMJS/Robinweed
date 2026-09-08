@@ -8,7 +8,7 @@ import { createApiApp } from './app.js';
 import { PostgresRepository } from './postgresRepository.js';
 import { parseClientMessage, acceptClientSequence } from './realtimeProtocol.js';
 import { createQuoteHouseService, createQuoteSeedService, createReadGameStateService } from './chainBindings.js';
-import { advanceOutsidePlayer, OUTSIDE_SPAWN } from './multiplayerMovement.js';
+import { advanceOutsidePlayer, outsideSpawnForSlot } from './multiplayerMovement.js';
 import { PresenceAdmission } from './presenceAdmission.js';
 
 const config = loadBackendConfig();
@@ -46,7 +46,10 @@ server.on('upgrade', async (request, socket, head) => {
 });
 
 wss.on('connection', (socket, identity, admissionToken, sessionToken) => {
-  const state = { userId: identity.userId, address: identity.address, joined: false, seq: -1, ...OUTSIDE_SPAWN, yaw: Math.PI, buttons: [] };
+  const occupiedSpawns=new Set([...sockets.values()].map(state=>`${state.x}:${state.z}`));
+  const spawn=Array.from({length:64},(_,slot)=>outsideSpawnForSlot(slot)).find(candidate=>!occupiedSpawns.has(`${candidate.x}:${candidate.z}`));
+  if(!spawn){admission.release(admissionToken);socket.close(1013,'WORLD_FULL');return;}
+  const state = { userId: identity.userId, address: identity.address, joined: false, seq: -1, ...spawn, yaw: Math.PI, buttons: [] };
   sockets.set(socket, state);
   let windowStarted = Date.now();
   let messages = 0;

@@ -20,7 +20,7 @@ test('mature variants provide colored bud clusters without replacing leaf materi
 test('game plants the selected ticker and rebuilds the matching mature visual', () => {
   assert.match(main, /plantSeed\(pot,state\.seeds,tickerForSlot\(state\.slot\)\)/);
   assert.match(main, /Object\.assign\(pot,result\.pot\)/);
-  assert.match(main, /seedTicker:index===0\?'HOOD':null/);
+  assert.match(main, /growth:0,water:0,seedTicker:null/);
   assert.match(main, /state\.claimableStocks\[result\.ticker\]/);
 });
 

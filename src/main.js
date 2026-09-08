@@ -439,7 +439,7 @@ WAREHOUSE_GROW_STATIONS.forEach((station,index)=>{
   const potMesh=new THREE.Mesh(new THREE.CylinderGeometry(.34,.27,.46,9),mats.pot);potMesh.position.y=.23;potMesh.castShadow=true;group.add(potMesh);
   const soil=new THREE.Mesh(new THREE.CylinderGeometry(.29,.29,.025,16),mats.soil);soil.position.y=.47;group.add(soil);
   const hit=new THREE.Mesh(new THREE.CylinderGeometry(.43,.43,1.65,10),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false}));hit.position.y=.85;group.add(hit);
-  const pot={group,hit,potMesh,soil,growth:index===0?10:0,water:index===0?82:0,seedTicker:index===0?'HOOD':null,plantedAt:null,wateredAt:null,plant:null,index,location:'warehouse'};hit.userData.interactive={type:'pot',pot};pots.push(pot);rebuildPlant(pot);
+  const pot={group,hit,potMesh,soil,growth:0,water:0,seedTicker:null,plantedAt:null,wateredAt:null,plant:null,index,location:'warehouse'};hit.userData.interactive={type:'pot',pot};pots.push(pot);rebuildPlant(pot);
 });
 
 const houseGrowStations=[];

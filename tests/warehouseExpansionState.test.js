@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   WAREHOUSE_GROW_STATIONS,
   WAREHOUSE_DECOR,
@@ -9,6 +10,13 @@ import {
 } from '../src/warehouseExpansionState.js';
 
 const overlaps = (a, b) => a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
+const mainSource = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
+
+test('tutorial warehouse starts with every grow pot empty and no claimable mature plant', () => {
+  assert.doesNotMatch(mainSource, /growth:index===0\?10:0/);
+  assert.doesNotMatch(mainSource, /seedTicker:index===0\?'HOOD':null/);
+  assert.match(mainSource, /growth:0,water:0,seedTicker:null/);
+});
 
 test('warehouse has eight grow stations while preserving the original four', () => {
   assert.equal(WAREHOUSE_GROW_STATIONS.length, 8);

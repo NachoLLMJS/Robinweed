@@ -3,6 +3,10 @@ import { boundsForLocation, cityBuildingFor } from '../src/navigationState.js';
 import { STREET_LAYOUT } from '../src/streetLifeState.js';
 
 export const OUTSIDE_SPAWN = Object.freeze({ x: 0, z: 9.55 });
+export function outsideSpawnForSlot(slot) {
+  if (!Number.isInteger(slot) || slot < 0 || slot >= 64) throw new Error('INVALID_SPAWN_SLOT');
+  return Object.freeze({ x: ((slot % 8) - 3.5) * 0.8, z: OUTSIDE_SPAWN.z + Math.floor(slot / 8) * 0.8 });
+}
 const PLAYER_RADIUS = 0.28;
 const OUTSIDE_BOUNDS = boundsForLocation('street');
 const OUTSIDE_OBSTACLES = Object.freeze([

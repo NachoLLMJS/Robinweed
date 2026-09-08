@@ -21,7 +21,8 @@ test('Railway starts the production API only after its idempotent database migra
   assert.doesNotMatch(railway, /preDeployCommand/);
   assert.match(server, /listen\(config\.port, '0\.0\.0\.0'/);
   assert.match(server, /SIGTERM/);
-  assert.match(server, /\.\.\.OUTSIDE_SPAWN/);
+  assert.match(server, /outsideSpawnForSlot/);
+  assert.match(server, /occupiedSpawns/);
 });
 
 test('Railway runtime authenticates WebSocket upgrades and never loads deployment keys', () => {
