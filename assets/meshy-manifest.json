@@ -133,7 +133,7 @@
       "street_furniture_cluster": "/models-v9/street/street-furniture-cluster.glb",
       "neighbor_older_source": "/models-v9/street/neighbor-older.glb",
       "neighbor_older_idle": "/models-v9/street/neighbor-older-idle.glb",
-      "street_cat": "/models-v9/street/street-cat.glb"
+      "street_cat_retired": "/models-v9/street/street-cat.glb"
     },
     "references": "/assets/references-v9/street",
     "meshy_tasks": "/assets/meshy-tasks-v9/street",
@@ -143,9 +143,10 @@
     "retired_after_visual_review": [
       "neighbor-young.glb",
       "neighbor-young-walk.glb",
-      "background-block.glb"
+      "background-block.glb",
+      "street-cat.glb"
     ],
-    "integration": "Active V9 street layer: lamps, vegetation, moving delivery van, loading props, street furniture, one approved idle neighbor and a stationary cat with subtle idle motion. The detailed young walker, sliding cat patrol and fused three-building block were removed after visual review."
+    "integration": "Active V9 street layer: lamps, vegetation, moving delivery van, loading props, street furniture and one approved idle neighbor. The black street cat, detailed young walker, sliding cat patrol and fused three-building block were removed after visual review."
   },
   "v10_outputs": {
     "city": {
@@ -155,6 +156,14 @@
     "references": "/assets/references-v10/city",
     "meshy_tasks": "/assets/meshy-tasks-v10/city",
     "integration": "Two individually generated low-detail houses replace the rejected fused three-building block. Each house remains independently positionable and replaceable."
+  },
+  "v33_outputs": {
+    "street": {
+      "sad_cream_cat": "/models-v33/street/sad-cream-cat.glb"
+    },
+    "reference": "external user-provided 1024x1024 PNG (not committed)",
+    "meshy_task": "/assets/meshy-tasks-v33/street/sad-cream-cat.json",
+    "integration": "A visually approved seated cream low-poly cat with blue eyes and tear markings replaces the retired black V9 sidewalk cat."
   },
   "animations": {
     "idle_action_id": 0,

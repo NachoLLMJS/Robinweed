@@ -25,8 +25,17 @@ test('Railway starts the production API only after its idempotent database migra
   assert.match(server, /occupiedSpawns/);
 });
 
-test('Railway runtime authenticates WebSocket upgrades and never loads deployment keys', () => {
+test('Railway runtime authenticates players while spectators remain bounded and read-only', () => {
+  assert.match(server, /realtimeRoleForUrl/);
+  assert.match(server, /roleAllowsClientMessages/);
+  assert.match(server, /stateReceivesSnapshots/);
+  assert.match(server, /role === 'spectator'/);
+  assert.match(server, /randomUUID/);
+  assert.match(server, /const spectatorAdmission = new PresenceAdmission/);
+  assert.match(server, /const connectionAdmission = role === 'spectator' \? spectatorAdmission : admission/);
+  assert.match(server, /connectionAdmission\.admit/);
   assert.match(server, /authenticateSession/);
+  assert.match(server, /socket\.userData\.role === 'player'/);
   assert.match(server, /request\.headers\.origin !== config\.publicOrigin/);
   assert.doesNotMatch(server, /DEPLOYER_PRIVATE_KEY/);
   assert.match(server, /split\(','\).*\.at\(-1\)/s);

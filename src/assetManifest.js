@@ -28,7 +28,7 @@ export const ASSET_URLS = Object.freeze({
     househeadIdle: '/models-v24/characters/househead-idle.glb?v=1',
     foxWalker: '/models-v30/characters/fox-walk.glb?v=1',
     neonCatWalker: '/models-v31/characters/neon-cat-walk.glb?v=1',
-    cat: '/models-v9/street/street-cat.glb',
+    cat: '/models-v33/street/sad-cream-cat.glb?v=1',
     simpleHouseA: '/models-v10/city/simple-house-a.glb',
     simpleHouseB: '/models-v10/city/simple-house-b.glb',
     simpleHouseC: '/models-v13/city/detailed-house-c.glb',

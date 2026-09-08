@@ -30,13 +30,14 @@ export function createSerializedAuthenticator(authenticate = authenticateRealtim
 }
 
 export class MultiplayerClient {
-  constructor({ WebSocketImpl = WebSocket, onSnapshot = () => {}, onClose = () => {}, onStatus = () => {}, setTimeoutImpl = setTimeout, clearTimeoutImpl = clearTimeout } = {}) {
+  constructor({ WebSocketImpl = WebSocket, onSnapshot = () => {}, onClose = () => {}, onStatus = () => {}, setTimeoutImpl = setTimeout, clearTimeoutImpl = clearTimeout, spectator = false } = {}) {
     this.WebSocketImpl = WebSocketImpl;
     this.onSnapshot = onSnapshot;
     this.onClose = onClose;
     this.onStatus = onStatus;
     this.setTimeoutImpl = setTimeoutImpl;
     this.clearTimeoutImpl = clearTimeoutImpl;
+    this.spectator = spectator;
     this.clientSeq = 0;
     this.serverSeq = -1;
     this.socket = null;
@@ -53,6 +54,7 @@ export class MultiplayerClient {
     this.reconnectTimer = null;
     this.onStatus({ state: 'connecting' });
     const url = new URL('/realtime', origin);
+    if (this.spectator) url.searchParams.set('role', 'spectator');
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     const socket = new this.WebSocketImpl(url);
     this.socket = socket;
@@ -61,7 +63,7 @@ export class MultiplayerClient {
       this.reconnectDelay = 500;
       this.serverSeq = -1;
       this.onStatus({ state: 'socket-open' });
-      socket.send(JSON.stringify({ type: 'join_world', worldId: 'outside' }));
+      if (!this.spectator) socket.send(JSON.stringify({ type: 'join_world', worldId: 'outside' }));
     });
     socket.addEventListener('message', event => {
       if (this.socket !== socket) return;
@@ -89,7 +91,7 @@ export class MultiplayerClient {
   }
 
   sendInput(buttons, lookDirection) {
-    if (this.socket?.readyState !== this.WebSocketImpl.OPEN || !Number.isFinite(lookDirection)) return false;
+    if (this.spectator || this.socket?.readyState !== this.WebSocketImpl.OPEN || !Number.isFinite(lookDirection)) return false;
     const turn = Math.PI * 2;
     const normalizedLookDirection = ((lookDirection + Math.PI) % turn + turn) % turn - Math.PI;
     this.socket.send(JSON.stringify({ type: 'input', clientSeq: ++this.clientSeq, buttons, lookDirection: normalizedLookDirection }));

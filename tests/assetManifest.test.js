@@ -33,7 +33,7 @@ test('approved warehouse props and complete city buildings use versioned GLBs', 
     househeadIdle: '/models-v24/characters/househead-idle.glb?v=1',
     foxWalker: '/models-v30/characters/fox-walk.glb?v=1',
     neonCatWalker: '/models-v31/characters/neon-cat-walk.glb?v=1',
-    cat: '/models-v9/street/street-cat.glb',
+    cat: '/models-v33/street/sad-cream-cat.glb?v=1',
     simpleHouseA: '/models-v10/city/simple-house-a.glb',
     simpleHouseB: '/models-v10/city/simple-house-b.glb',
     simpleHouseC: '/models-v13/city/detailed-house-c.glb',
@@ -97,12 +97,29 @@ test('street-life GLBs including fitted versioned Meshy houses are loaded into t
   assert.doesNotMatch(source, /ASSET_URLS\.street\.neighborYoung/);
   assert.doesNotMatch(source, /ASSET_URLS\.street\.backgroundBlock/);
   assert.doesNotMatch(source, /catPatrol|advancePatrol\(catPatrol/);
+  assert.doesNotMatch(source, /models-v9\/street\/street-cat\.glb/);
   assert.match(source, /streetIntersection/);
   assert.match(source, /streetActors/);
   assert.match(source, /startStreetAmbience/);
   assert.match(source, /MeshoptDecoder/);
   assert.match(source, /setMeshoptDecoder\(MeshoptDecoder\)/);
   assert.match(source, /ASSET_URLS\.warehouse\.exterior/);
+});
+
+test('approved V33 sidewalk cat stays a compact textured low-poly seated asset', () => {
+  const glb = readFileSync(new URL('../public/models-v33/street/sad-cream-cat.glb', import.meta.url));
+  assert.equal(glb.subarray(0, 4).toString(), 'glTF');
+  const jsonLength = glb.readUInt32LE(12);
+  const document = JSON.parse(glb.subarray(20, 20 + jsonLength).toString().replace(/\0+$/g, '').trim());
+  const triangles = document.meshes.flatMap(mesh => mesh.primitives).reduce((total, primitive) => total + document.accessors[primitive.indices].count / 3, 0);
+  assert.equal(document.meshes.length, 1);
+  assert.equal(document.materials.length, 1);
+  assert.equal(document.images.length, 1);
+  assert.equal(document.animations?.length ?? 0, 0);
+  assert.ok(triangles >= 3_000 && triangles <= 5_000);
+  const position = document.accessors[document.meshes[0].primitives[0].attributes.POSITION];
+  assert.deepEqual(position.min, [-0.37304699420928955, -0.5, -0.47070300579071045]);
+  assert.deepEqual(position.max, [0.375, 0.5, 0.4726560115814209]);
 });
 
 test('Vlad v37 uses separate rigged low-poly clips without the unwanted back mark', () => {
