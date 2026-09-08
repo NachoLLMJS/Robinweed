@@ -31,10 +31,26 @@ test('spectator mode connects to read-only multiplayer and renders every outside
   assert.doesNotMatch(source, /ensureAuthenticatedSession\([^)]*spectator/);
 });
 
+test('spectator wallet events are inert and cannot trigger SIWE or state loading', () => {
+  assert.match(source, /async function handleAccountsChanged\(accounts\)\{if\(state\.mode==='spectator'\)return;/);
+  assert.match(source, /function handleChainChanged\(chainId\)\{if\(state\.mode==='spectator'\)return;/);
+  assert.match(source, /function handleWalletDisconnect\(\)\{if\(state\.mode==='spectator'\)return;clearWalletContext\(\);\}/);
+  assert.match(source, /globalThis\.ethereum\?\.on\?\.\('disconnect',handleWalletDisconnect\)/);
+});
+
+test('spectator entry cancels pending player entry and incompatible realtime clients', () => {
+  assert.match(source, /let sessionEntryGeneration=0/);
+  assert.match(source, /const entryGeneration=\+\+sessionEntryGeneration/);
+  assert.match(source, /entryGeneration!==sessionEntryGeneration/);
+  assert.match(source, /function enterSpectatorSession\(\)\{sessionEntryGeneration\+\+;clearWalletContext\(\);beginSession\('spectator'\);\}/);
+  assert.match(source, /multiplayerClient&&multiplayerClient\.spectator!==\(mode==='spectator'\)/);
+  assert.match(source, /#spectate'\)\.addEventListener\('click',enterSpectatorSession\)/);
+});
+
 test('entering player mode requires wallet authentication and state loading before the loader closes', () => {
   assert.match(source, /async function enterPlayerSession/);
   assert.match(source, /await connectPlayerWallet\(\)/);
-  assert.match(source, /if\(!wallet\|\|state\.walletAddress/);
+  assert.match(source, /if\(entryGeneration!==sessionEntryGeneration\|\|!wallet\|\|state\.walletAddress/);
   assert.match(source, /authenticatedWallet\?\.toLowerCase\(\)!==wallet\.toLowerCase\(\)/);
   assert.match(source, /beginSession\('player'\)/);
   assert.doesNotMatch(source, /#play'\)\.addEventListener\('click',\(\)=>beginSession\('player'\)\)/);
