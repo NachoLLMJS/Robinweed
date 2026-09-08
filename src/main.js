@@ -20,6 +20,7 @@ import { warehouseVisibilityForLocation } from './warehouseVisibilityState.js';
 import { trailerButtonsVisible, spectatorFlightDelta } from './loaderState.js';
 import { isHouseheadNearby, nextHouseheadPanel } from './househeadSwapState.js';
 import { isNeighborGuideNearby } from './neighborGuideState.js';
+import { buildSkyStarPositions } from './skyStarsState.js';
 import { SEED_VARIETIES, tickerForSlot } from './seedVarietyState.js';
 import { VENDOR_SEED_PRODUCTS } from './vendorSeedShopState.js';
 import { HOUSE_PROPERTIES, propertyNear, purchasePreview, propertyAccess, streetSpawnForProperty } from './housePropertyState.js';
@@ -89,8 +90,7 @@ scene.add(moon);
 // Layered night sky: moon, stars and slow cloud silhouettes replace the flat void.
 const moonDisc=new THREE.Mesh(new THREE.SphereGeometry(2.2,20,14),new THREE.MeshBasicMaterial({color:0xfff2bd,fog:false}));
 moonDisc.position.set(-13,14,41);scene.add(moonDisc);
-const starPositions=[];
-for(let i=0;i<150;i++){const a=i*2.39996;const radius=22+(i%17)*1.45;starPositions.push(Math.cos(a)*radius,7+(i*13%19)*.75,18+Math.sin(a)*radius);}
+const starPositions=buildSkyStarPositions();
 const starGeometry=new THREE.BufferGeometry();starGeometry.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));
 const stars=new THREE.Points(starGeometry,new THREE.PointsMaterial({color:0xcfe8cf,size:.075,sizeAttenuation:true,fog:false}));scene.add(stars);
 const nightClouds=[];
@@ -748,6 +748,7 @@ function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-
   growLights.forEach((l,i)=>l.intensity=7.2+Math.sin(now*.0017+i)*.35);
   streetLights.forEach((light,i)=>light.intensity=(light.userData.baseIntensity??2.35)+Math.sin(now*.0011+i*1.7)*.18);
   nightClouds.forEach((cloud,i)=>{cloud.position.x+=dt*(.08+i*.025);if(cloud.position.x>18)cloud.position.x=-18;});
+  stars.position.copy(camera.position);
   vehicleRouteState=advanceVehicleRoute(vehicleRouteState,dt,STREET_LAYOUT.vehicleRoute,STREET_LAYOUT.van.speed);
   if(streetActors.van){streetActors.van.position.x=vehicleRouteState.x;streetActors.van.position.z=vehicleRouteState.z;const turn=Math.atan2(Math.sin(vehicleRouteState.rotationY-streetActors.van.rotation.y),Math.cos(vehicleRouteState.rotationY-streetActors.van.rotation.y));streetActors.van.rotation.y+=turn*Math.min(1,dt*4.2);}
   foxPatrolState=advancePatrol(foxPatrolState,dt,STREET_LAYOUT.foxWalker.minZ,STREET_LAYOUT.foxWalker.maxZ,STREET_LAYOUT.foxWalker.speed);
