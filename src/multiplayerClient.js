@@ -14,6 +14,12 @@ export async function authenticateRealtime({ ethereum, account, fetchImpl = fetc
   if (!verifyResponse.ok) throw new Error('AUTHENTICATION_FAILED');
 }
 
+export function isSameWalletAddress(left, right) {
+  return /^0x[0-9a-fA-F]{40}$/.test(left ?? '')
+    && /^0x[0-9a-fA-F]{40}$/.test(right ?? '')
+    && left.toLowerCase() === right.toLowerCase();
+}
+
 export function createSerializedAuthenticator(authenticate = authenticateRealtime) {
   let tail = Promise.resolve();
   return input => {

@@ -23,6 +23,7 @@ test('entering player mode requires wallet authentication and state loading befo
 });
 
 test('wallet authentication and account changes are generation-bound and clear failed identity', () => {
+  assert.match(source, /if\(isSameWalletAddress\(state\.walletAddress,wallet\)\)return/);
   assert.match(source, /walletConnectionGeneration/);
   assert.match(source, /generation!==walletConnectionGeneration/);
   assert.match(source, /if\(generation===walletConnectionGeneration\)clearWalletContext\(\)/);

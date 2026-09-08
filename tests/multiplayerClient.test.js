@@ -1,8 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authenticateRealtime, createSerializedAuthenticator, MultiplayerClient } from '../src/multiplayerClient.js';
+import { authenticateRealtime, createSerializedAuthenticator, isSameWalletAddress, MultiplayerClient } from '../src/multiplayerClient.js';
 
 const account = '0x1111111111111111111111111111111111111111';
+
+test('wallet identity comparison ignores checksum casing but rejects missing or different accounts', () => {
+  assert.equal(isSameWalletAddress(account, account.toUpperCase().replace('0X', '0x')), true);
+  assert.equal(isSameWalletAddress(account, '0x2222222222222222222222222222222222222222'), false);
+  assert.equal(isSameWalletAddress(account, null), false);
+});
 
 test('multiplayer authentication uses SIWE personal_sign and never a transaction method', async () => {
   const walletCalls = [];
