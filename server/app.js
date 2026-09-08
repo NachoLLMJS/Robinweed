@@ -53,7 +53,7 @@ export function createApiApp({ config, repository, quoteSeed = null, quoteHouse 
   const websocketOrigin = config.publicOrigin.replace(/^http/, 'ws');
   app.use((_request, response, next) => {
     response.set({
-      'Content-Security-Policy': `default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' ${websocketOrigin}; form-action 'self'`,
+      'Content-Security-Policy': `default-src 'self'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self' ${websocketOrigin} blob:; worker-src 'none'; form-action 'self'`,
       'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer',
@@ -118,8 +118,10 @@ export function createApiApp({ config, repository, quoteSeed = null, quoteHouse 
   app.get('/health/ready', async (_request, response) => {
     try {
       const databaseReady=await repository.ready();
-      const bindingsReady=!config.publicConfig?.economyActive||(quoteSeed&&quoteHouse&&readGameState&&walletProvider);
-      const rpcReady=!config.publicConfig?.economyActive||await walletProvider.send('eth_chainId',[])==='0x1237';
+      const stateBindingsReady=Boolean(readGameState&&walletProvider);
+      const economyBindingsReady=!config.publicConfig?.economyActive||Boolean(quoteSeed&&quoteHouse);
+      const bindingsReady=stateBindingsReady&&economyBindingsReady;
+      const rpcReady=stateBindingsReady&&await walletProvider.send('eth_chainId',[])==='0x1237';
       response.status(databaseReady&&bindingsReady&&rpcReady ? 200 : 503).json({ status: databaseReady&&bindingsReady&&rpcReady?'ready':'unavailable' });
     } catch {
       response.status(503).json({ status: 'unavailable' });

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { authenticateRealtime, MultiplayerClient } from '../src/multiplayerClient.js';
+import { authenticateRealtime, createSerializedAuthenticator, MultiplayerClient } from '../src/multiplayerClient.js';
 
 const account = '0x1111111111111111111111111111111111111111';
 
@@ -23,6 +23,34 @@ test('multiplayer authentication uses SIWE personal_sign and never a transaction
 
 test('multiplayer authentication stops when challenge or verification fails', async () => {
   await assert.rejects(authenticateRealtime({ ethereum: { request: async () => '' }, account, fetchImpl: async () => ({ ok: false }) }));
+});
+
+test('wallet authentications are serialized so the newest request owns the final session cookie', async () => {
+  const pending = [];
+  const calls = [];
+  const authenticate = input => new Promise((resolve, reject) => { calls.push(input.account); pending.push({ resolve, reject }); });
+  const serialized = createSerializedAuthenticator(authenticate);
+  const first = serialized({ account: 'A' });
+  const second = serialized({ account: 'B' });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(calls, ['A']);
+  pending.shift().resolve();
+  await first;
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(calls, ['A', 'B']);
+  pending.shift().resolve();
+  await second;
+
+  const third = serialized({ account: 'C' });
+  const fourth = serialized({ account: 'D' });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(calls, ['A', 'B', 'C']);
+  pending.shift().reject(new Error('rejected'));
+  await assert.rejects(third);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(calls, ['A', 'B', 'C', 'D']);
+  pending.shift().resolve();
+  await fourth;
 });
 
 test('multiplayer reconnects after transient close but not policy rejection or manual close', () => {

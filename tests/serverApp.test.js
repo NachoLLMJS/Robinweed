@@ -23,8 +23,19 @@ function memoryRepository() {
 
 const config = { publicOrigin: 'https://stockdealer.example', chainId: 4663 };
 
-test('API exposes liveness/readiness and issues a strict SIWE challenge', async () => {
+test('API permits only the blob image and WebAssembly sources required by Three.js GLB assets', async () => {
   const app = createApiApp({ config, repository: memoryRepository() });
+  const response = await request(app).get('/health/live');
+  const csp = response.headers['content-security-policy'];
+  assert.match(csp, /script-src 'self' 'wasm-unsafe-eval'/);
+  assert.match(csp, /img-src 'self' data: blob:/);
+  assert.match(csp, /connect-src 'self' [^;]+ blob:/);
+  assert.match(csp, /worker-src 'none'/);
+  assert.doesNotMatch(csp, /(?:^|\s)'unsafe-eval'(?:\s|;|$)/);
+});
+
+test('API exposes liveness/readiness and issues a strict SIWE challenge', async () => {
+  const app = createApiApp({ config, repository: memoryRepository(), readGameState: async () => ({}), walletProvider: { send: async () => '0x1237' } });
   assert.equal((await request(app).get('/health/live')).status, 200);
   assert.equal((await request(app).get('/health/ready')).status, 200);
   const wallet = Wallet.createRandom();
@@ -32,6 +43,18 @@ test('API exposes liveness/readiness and issues a strict SIWE challenge', async 
   assert.equal(response.status, 200);
   assert.equal(response.body.chainId, 4663);
   assert.match(response.body.message, /stockdealer\.example wants you to sign in/);
+});
+
+test('paused production is not ready unless authenticated state reads and Robinhood RPC are available', async () => {
+  const unavailable = createApiApp({ config: { ...config, publicConfig: { economyActive: false } }, repository: memoryRepository() });
+  assert.equal((await request(unavailable).get('/health/ready')).status, 503);
+  const available = createApiApp({
+    config: { ...config, publicConfig: { economyActive: false } },
+    repository: memoryRepository(),
+    readGameState: async () => ({}),
+    walletProvider: { send: async () => '0x1237' },
+  });
+  assert.equal((await request(available).get('/health/ready')).status, 200);
 });
 
 test('API verifies SIWE and returns only a secure opaque session cookie', async () => {

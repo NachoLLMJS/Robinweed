@@ -14,6 +14,15 @@ export async function authenticateRealtime({ ethereum, account, fetchImpl = fetc
   if (!verifyResponse.ok) throw new Error('AUTHENTICATION_FAILED');
 }
 
+export function createSerializedAuthenticator(authenticate = authenticateRealtime) {
+  let tail = Promise.resolve();
+  return input => {
+    const current = tail.then(() => authenticate(input));
+    tail = current.catch(() => {});
+    return current;
+  };
+}
+
 export class MultiplayerClient {
   constructor({ WebSocketImpl = WebSocket, onSnapshot = () => {}, onClose = () => {}, setTimeoutImpl = setTimeout, clearTimeoutImpl = clearTimeout } = {}) {
     this.WebSocketImpl = WebSocketImpl;

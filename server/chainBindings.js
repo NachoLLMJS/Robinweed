@@ -19,12 +19,14 @@ const VAULT_READ_ABI = ['function remainingSeeds(address) view returns (uint256)
 const QUOTER_ABI = ['function quoteExactInput(bytes path,uint256 amountIn) returns (uint256 amountOut,uint160[] sqrtPriceX96AfterList,uint32[] initializedTicksCrossedList,uint256 gasEstimate)'];
 const QUOTER = '0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7';
 
+const createProvider = config => new JsonRpcProvider(config.rpcPrimary, 4663, { staticNetwork: true, batchMaxCount: 10, batchStallTime: 10 });
+
 function bindings(config) {
   if (config?.publicConfig?.economyActive !== true) return null;
   const byName = new Map((config.publicConfig.contracts ?? []).map(contract => [contract.name, contract.address]));
   if (!byName.get('GameCore') || !byName.get('EconomyRouter') || !config.rpcPrimary) return null;
   try {
-    const provider = new JsonRpcProvider(config.rpcPrimary, 4663, { staticNetwork: true });
+    const provider = createProvider(config);
     const adapters = new Map();
     const gameCoreAddress = getAddress(byName.get('GameCore'));
     const economyRouterAddress = getAddress(byName.get('EconomyRouter'));
@@ -78,16 +80,14 @@ export function createQuoteHouseService(config) {
 }
 
 export function createReadGameStateService(config) {
-  const probe = bindings(config);
-  if (!probe) return null;
-  probe.gameCore.runner.destroy();
   const byName = new Map((config.publicConfig.contracts ?? []).map(contract => [contract.name, contract.address]));
+  if (!config.rpcPrimary || !byName.get('GameCore')) return null;
   for (const symbol of ['AAPL', 'GOOGL', 'MSFT', 'MSTR', 'NVDA', 'QQQ', 'TSLA']) if (!byName.get(`Vault_${symbol}`)) return null;
+  try { getAddress(byName.get('GameCore')); } catch { return null; }
   const propertyIds = Array.from({ length: 35 }, (_, index) => index + 1);
   return async (address, { signal } = {}) => {
-    const chain = bindings(config);
-    if (!chain) throw new Error('STATE_BINDINGS_UNAVAILABLE');
-    const provider = chain.gameCore.runner;
+    const provider = createProvider(config);
+    const gameCore = new Contract(getAddress(byName.get('GameCore')), GAME_CORE_READ_ABI, provider);
     const vaults = new Map();
     for (const symbol of ['AAPL', 'GOOGL', 'MSFT', 'MSTR', 'NVDA', 'QQQ', 'TSLA']) vaults.set(symbol, new Contract(getAddress(byName.get(`Vault_${symbol}`)), VAULT_READ_ABI, provider));
     const abort = () => provider.destroy();
@@ -95,7 +95,7 @@ export function createReadGameStateService(config) {
     try {
       const block = await provider.getBlock('latest');
       if (!block || !Number.isSafeInteger(block.number) || !/^0x[0-9a-fA-F]{64}$/.test(block.hash ?? '')) throw new Error('STATE_BLOCK_UNAVAILABLE');
-      return await readWalletGameState({ address, gameCore: chain.gameCore, propertyIds, vaults, blockTag: block.number, blockHash: block.hash });
+      return await readWalletGameState({ address, gameCore, propertyIds, vaults, blockTag: block.number, blockHash: block.hash });
     }
     finally { signal?.removeEventListener('abort', abort); provider.destroy(); }
   };

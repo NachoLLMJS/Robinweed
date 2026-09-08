@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 const source = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 
 test('game authenticates multiplayer after wallet connection and renders outside snapshots', () => {
-  assert.match(source, /authenticateRealtime/);
+  assert.match(source, /createSerializedAuthenticator/);
   assert.match(source, /new MultiplayerClient/);
   assert.match(source, /remotePlayers/);
   assert.match(source, /onMultiplayerSnapshot/);
@@ -13,8 +13,26 @@ test('game authenticates multiplayer after wallet connection and renders outside
   assert.match(source, /camera\.position\.z=player\.z/);
 });
 
+test('entering player mode requires wallet authentication and state loading before the loader closes', () => {
+  assert.match(source, /async function enterPlayerSession/);
+  assert.match(source, /await connectPlayerWallet\(\)/);
+  assert.match(source, /if\(!wallet\|\|state\.walletAddress/);
+  assert.match(source, /authenticatedWallet\?\.toLowerCase\(\)!==wallet\.toLowerCase\(\)/);
+  assert.match(source, /beginSession\('player'\)/);
+  assert.doesNotMatch(source, /#play'\)\.addEventListener\('click',\(\)=>beginSession\('player'\)\)/);
+});
+
+test('wallet authentication and account changes are generation-bound and clear failed identity', () => {
+  assert.match(source, /walletConnectionGeneration/);
+  assert.match(source, /generation!==walletConnectionGeneration/);
+  assert.match(source, /if\(generation===walletConnectionGeneration\)clearWalletContext\(\)/);
+  assert.match(source, /function clearWalletContext\(\)\{walletConnectionGeneration\+\+/);
+});
+
 test('game sends multiplayer input only from the shared street at a bounded cadence', () => {
   assert.match(source, /state\.location==='street'/);
   assert.match(source, /now-lastMultiplayerInputAt>=100/);
   assert.match(source, /multiplayerClient\.sendInput/);
+  assert.ok(source.indexOf('client.connect();multiplayerClient=client') > 0);
+  assert.match(source, /catch\(error\)\{multiplayerClient=null/);
 });
