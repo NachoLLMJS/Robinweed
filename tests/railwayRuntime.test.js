@@ -33,6 +33,12 @@ test('Railway runtime authenticates WebSocket upgrades and never loads deploymen
   assert.doesNotMatch(server, /split\(','\)\[0\]/);
 });
 
+test('Railway realtime publishes every 50ms simulation tick instead of dropping alternate snapshots', () => {
+  assert.match(server, /const tick = setInterval/);
+  assert.match(server, /}, 50\);/);
+  assert.doesNotMatch(server, /serverSeq\s*%\s*2/);
+});
+
 test('Railway has an explicit private indexer service command', () => {
   assert.equal(packageJson.scripts['start:indexer'], 'node server/indexer.js');
   assert.match(railwayIndexer, /startCommand = "npm run start:indexer"/);

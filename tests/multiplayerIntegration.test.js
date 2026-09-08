@@ -9,8 +9,12 @@ test('game authenticates multiplayer after wallet connection and renders outside
   assert.match(source, /new MultiplayerClient/);
   assert.match(source, /remotePlayers/);
   assert.match(source, /onMultiplayerSnapshot/);
-  assert.match(source, /camera\.position\.x=player\.x/);
-  assert.match(source, /camera\.position\.z=player\.z/);
+  assert.match(source, /localServerTarget\.set\(player\.x,player\.z\)/);
+  assert.match(source, /reconcilePredictedPosition/);
+  assert.match(source, /beginRemoteMotion/);
+  assert.match(source, /sampleRemoteMotion/);
+  assert.match(source, /model\.rotation\.y=Math\.PI/);
+  assert.doesNotMatch(source, /group\.position\.lerp\(group\.userData\.target,\.28\)/);
   assert.match(source, /PLAYER_SKINS/);
   assert.match(source, /group\.position\.set\(player\.x,\.02,player\.z\)/);
   assert.match(source, /ui\.onlinePlayers\.textContent=String\(snapshot\.players\.length\)/);
@@ -33,12 +37,13 @@ test('wallet authentication and account changes are generation-bound and clear f
   assert.match(source, /walletConnectionGeneration/);
   assert.match(source, /generation!==walletConnectionGeneration/);
   assert.match(source, /if\(generation===walletConnectionGeneration\)clearWalletContext\(\)/);
-  assert.match(source, /function clearWalletContext\(\)\{walletConnectionGeneration\+\+/);
+  assert.match(source, /function clearWalletContext\(\)\{walletConnectionGeneration\+\+;multiplayerGeneration\+\+;multiplayerClient\?\.close\(\);multiplayerClient=null;localServerReady=false/);
 });
 
 test('game sends multiplayer input only from the shared street at a bounded cadence', () => {
   assert.match(source, /state\.location==='street'/);
-  assert.match(source, /now-lastMultiplayerInputAt>=100/);
+  assert.match(source, /advanceCadence\(lastMultiplayerInputAt,now,50\)/);
+  assert.doesNotMatch(source, /lastMultiplayerInputAt=now/);
   assert.match(source, /multiplayerClient\.sendInput/);
   assert.ok(source.indexOf('multiplayerClient=client;client.connect()') > 0);
   assert.match(source, /catch\(error\)\{multiplayerClient=null/);

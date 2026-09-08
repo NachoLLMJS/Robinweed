@@ -22,8 +22,8 @@ export function advanceOutsidePlayer(state, deltaSeconds) {
   const length = Math.hypot(forward, strafe) || 1;
   const speed = state.buttons.includes('run') ? 5.1 : 3.25;
   const delta = {
-    x: (Math.sin(state.yaw) * forward + Math.cos(state.yaw) * strafe) / length * speed * deltaSeconds,
-    z: (-Math.cos(state.yaw) * forward + Math.sin(state.yaw) * strafe) / length * speed * deltaSeconds,
+    x: (-Math.sin(state.yaw) * forward + Math.cos(state.yaw) * strafe) / length * speed * deltaSeconds,
+    z: (-Math.cos(state.yaw) * forward - Math.sin(state.yaw) * strafe) / length * speed * deltaSeconds,
   };
   const next = moveCircle(state, delta, OUTSIDE_OBSTACLES, OUTSIDE_BOUNDS, PLAYER_RADIUS);
   return { ...state, x: next.x, z: next.z };

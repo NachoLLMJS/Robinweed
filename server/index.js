@@ -87,7 +87,7 @@ const tick = setInterval(() => {
     if (!state.joined) continue;
     Object.assign(state,advanceOutsidePlayer(state,dt));
   }
-  if (++serverSeq % 2) return;
+  serverSeq++;
   const players = [...sockets.values()].filter(state => state.joined).map(({ userId, address, x, z, yaw }) => ({ userId, address, x, z, yaw }));
   const payload = JSON.stringify({ type: 'snapshot', serverSeq, worldVersion: 1, players });
   for (const [socket,state] of sockets) if (state.joined&&socket.readyState === WebSocket.OPEN) { if(socket.bufferedAmount>65_536)socket.close(1008,'SLOW_CONSUMER');else socket.send(payload); }
