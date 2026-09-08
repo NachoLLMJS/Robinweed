@@ -9,7 +9,10 @@ export function validateOnchainSnapshot(snapshot, expectedAddress) {
   const houseIds = new Set();
   const propertiesByHouseId = new Map();
   for (const property of snapshot.properties) {
-    if (!Number.isInteger(property?.houseId) || property.houseId < 1 || property.houseId > 35 || houseIds.has(property.houseId) || !DECIMAL.test(property.price ?? '') || ![4, 8, 15].includes(property.capacity) || typeof property.configured !== 'boolean' || !ADDRESS.test(property.owner ?? '')) throw new Error('INVALID_PROPERTY_STATE');
+    const basicStateValid = Number.isInteger(property?.houseId) && property.houseId >= 1 && property.houseId <= 35 && !houseIds.has(property.houseId) && DECIMAL.test(property.price ?? '') && typeof property.capacity === 'number' && typeof property.configured === 'boolean' && ADDRESS.test(property.owner ?? '');
+    const pristineState = property?.configured === false && property.capacity === 0 && property.price === '0' && property.owner.toLowerCase() === '0x0000000000000000000000000000000000000000';
+    const configuredState = property?.configured === true && [4, 8, 15].includes(property.capacity) && DECIMAL.test(property.price ?? '') && BigInt(property.price) > 0n;
+    if (!basicStateValid || (!pristineState && !configuredState)) throw new Error('INVALID_PROPERTY_STATE');
     houseIds.add(property.houseId);
     propertiesByHouseId.set(property.houseId, property);
   }

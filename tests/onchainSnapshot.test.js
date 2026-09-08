@@ -21,6 +21,29 @@ test('onchain snapshot validates bounded state and preserves uint256 seed totals
   assert.equal(validateOnchainSnapshot(huge, address).totalSeeds, '900719925474099300006');
 });
 
+test('onchain snapshot accepts pristine unconfigured houses from a paused foundation', () => {
+  const pristine = {
+    ...base,
+    properties: Array.from({ length: 35 }, (_, index) => ({
+      houseId: index + 1,
+      price: '0',
+      capacity: 0,
+      configured: false,
+      owner: '0x0000000000000000000000000000000000000000',
+    })),
+    crops: [],
+  };
+  assert.equal(validateOnchainSnapshot(pristine, address).properties.length, 35);
+});
+
+test('onchain snapshot rejects inconsistent configured and unconfigured house states', () => {
+  for (const property of [
+    { ...base.properties[0], configured: false, capacity: 4 },
+    { ...base.properties[0], configured: false, capacity: 0, price: '1' },
+    { ...base.properties[0], configured: true, capacity: 0 },
+  ]) assert.throws(() => validateOnchainSnapshot({ ...base, properties: [property], crops: [] }, address), /INVALID_PROPERTY_STATE/);
+});
+
 test('onchain snapshot rejects wrong identity, malformed owners, duplicate houses and invalid crops', () => {
   for (const value of [
     { ...base, address: '0x2222222222222222222222222222222222222222' },
