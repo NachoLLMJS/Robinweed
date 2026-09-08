@@ -91,6 +91,25 @@ test('multiplayer accepts a restarted server sequence after reconnect', () => {
   assert.deepEqual(snapshots,[100,1]);
 });
 
+test('multiplayer normalizes accumulated camera yaw before sending input', () => {
+  class FakeSocket {
+    static OPEN = 1;
+    constructor() { this.readyState = 1; this.listeners = new Map(); this.sent = []; }
+    addEventListener(type, handler) { this.listeners.set(type, handler); }
+    send(payload) { this.sent.push(JSON.parse(payload)); }
+    close() {}
+    emit(type, event = {}) { this.listeners.get(type)?.(event); }
+  }
+  const client = new MultiplayerClient({ WebSocketImpl: FakeSocket });
+  const socket = client.connect('https://stockdealer.example');
+  socket.emit('open');
+  assert.equal(client.sendInput(['forward'], Math.PI * 4 + 0.25), true);
+  const input = socket.sent.at(-1);
+  assert.equal(input.type, 'input');
+  assert.ok(input.lookDirection >= -Math.PI && input.lookDirection <= Math.PI);
+  assert.ok(Math.abs(input.lookDirection - 0.25) < Number.EPSILON * 4);
+});
+
 test('multiplayer reports connecting, socket-open, online and close diagnostics', () => {
   class FakeSocket { static OPEN=1; constructor(){this.listeners=new Map();} addEventListener(t,h){this.listeners.set(t,h);} send(){} close(){} emit(t,e={}){this.listeners.get(t)?.(e);} }
   const statuses=[];

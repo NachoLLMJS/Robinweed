@@ -89,8 +89,10 @@ export class MultiplayerClient {
   }
 
   sendInput(buttons, lookDirection) {
-    if (this.socket?.readyState !== this.WebSocketImpl.OPEN) return false;
-    this.socket.send(JSON.stringify({ type: 'input', clientSeq: ++this.clientSeq, buttons, lookDirection }));
+    if (this.socket?.readyState !== this.WebSocketImpl.OPEN || !Number.isFinite(lookDirection)) return false;
+    const turn = Math.PI * 2;
+    const normalizedLookDirection = ((lookDirection + Math.PI) % turn + turn) % turn - Math.PI;
+    this.socket.send(JSON.stringify({ type: 'input', clientSeq: ++this.clientSeq, buttons, lookDirection: normalizedLookDirection }));
     return true;
   }
 
