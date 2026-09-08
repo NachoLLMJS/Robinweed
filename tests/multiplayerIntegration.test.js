@@ -11,6 +11,9 @@ test('game authenticates multiplayer after wallet connection and renders outside
   assert.match(source, /onMultiplayerSnapshot/);
   assert.match(source, /camera\.position\.x=player\.x/);
   assert.match(source, /camera\.position\.z=player\.z/);
+  assert.match(source, /PLAYER_SKINS/);
+  assert.match(source, /group\.position\.set\(player\.x,\.02,player\.z\)/);
+  assert.match(source, /ui\.onlinePlayers\.textContent=String\(snapshot\.players\.length\)/);
 });
 
 test('entering player mode requires wallet authentication and state loading before the loader closes', () => {
