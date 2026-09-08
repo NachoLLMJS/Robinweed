@@ -77,6 +77,8 @@ Create one Railway project with PostgreSQL and two services from the same GitHub
 
 ### Required variables
 
+The deployed, inactive mainnet addresses, blocks, code hashes and ABIs are versioned in `config/mainnet-contract-manifest.json`. Set `CONTRACT_MANIFEST_PATH=config/mainnet-contract-manifest.json`, leave `CONTRACT_MANIFEST_JSON` empty, and use `INDEXER_START_BLOCK=57826741`. The checked-in manifest deliberately keeps `economyActive:false` and `currency:null` until the final token and executable liquidity paths pass activation preflight.
+
 Use `.env.example` as the names-only template. Important rules:
 
 - `DATABASE_SSL_MODE=private` only over Railway private networking; otherwise use `verify-full` with `DATABASE_CA_BASE64`.

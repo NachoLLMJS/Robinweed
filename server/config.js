@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { Interface } from 'ethers';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const requiredAbiMembers = Object.freeze({
   GameCore: Object.freeze({ events: [
@@ -69,7 +71,12 @@ const schema = z.object({
 }).passthrough();
 
 export function loadBackendConfig(environment = process.env) {
-  const value = schema.parse(environment);
+  const sourceEnvironment = { ...environment };
+  if (!sourceEnvironment.CONTRACT_MANIFEST_JSON) {
+    if (sourceEnvironment.CONTRACT_MANIFEST_PATH !== 'config/mainnet-contract-manifest.json') throw new Error('VERSIONED_CONTRACT_MANIFEST_REQUIRED');
+    sourceEnvironment.CONTRACT_MANIFEST_JSON = readFileSync(resolve(sourceEnvironment.CONTRACT_MANIFEST_PATH), 'utf8');
+  }
+  const value = schema.parse(sourceEnvironment);
   if (new URL(value.ROBINHOOD_RPC_PRIMARY).hostname === new URL(value.ROBINHOOD_RPC_SECONDARY).hostname) throw new Error('INDEPENDENT_RPC_PROVIDERS_REQUIRED');
   if (value.DATABASE_SSL_MODE === 'verify-full' && !value.DATABASE_CA_BASE64) throw new Error('DATABASE_CA_REQUIRED');
   if (value.CONTRACT_MANIFEST_JSON.economyActive && value.INDEXER_START_BLOCK > Math.min(...value.CONTRACT_MANIFEST_JSON.contracts.map(contract => contract.deploymentBlock))) throw new Error('INDEXER_START_BLOCK_SKIPS_DEPLOYMENT');

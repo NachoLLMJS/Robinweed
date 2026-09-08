@@ -1,0 +1,85 @@
+{
+  "version": "1.0",
+  "chainId": "4663",
+  "createdAt": 1788884754692,
+  "meta": {
+    "name": "STOCKDEALER ownership acceptance 0xd42be29e30406781f0d63fc55421f5a523369caa4bab5af07c3a2c2ffb532b72",
+    "description": "Safe batch to accept ownership before any economy activation",
+    "txBuilderVersion": "1.18.0",
+    "createdFromSafeAddress": "0x8eaEa23a102707Aa7C492B14a59bB64B1c2ee13A",
+    "createdFromOwnerAddress": "",
+    "checksum": null
+  },
+  "transactions": [
+    {
+      "to": "0x8fa742B55c01B9dbE563dC77eB53a3ba614a0914",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xC85b30dE719E77bac3D5D717bb805B69957D5D69",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x5C8955BebDD92F3741dF6816e2B4Cdc0f0b1EdA1",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xbEAB147F795358AAb555861a5f3861861B778074",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x2c98fBaD23B85b70B5bAd25b93C0540931554526",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xeD6e81F023b43C916Fd2b4647bE25521F31fE547",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x4e8029f6E984dc5d8aDD10398B4eF625A3D15359",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xB246a176a00867bA0c565FbD4C1c093843f6fc8f",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x1fCA62BF4504CA1d4DF7C36C3239495706891382",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x55F489a9a65d0646857Ed0CCe72c1d1f11eFC167",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    }
+  ]
+}

@@ -24,6 +24,18 @@ test('backend config accepts only complete Robinhood Chain Mainnet production se
   assert.equal(config.publicOrigin, 'https://stockdealer.example');
 });
 
+test('backend loads the versioned mainnet manifest from a repository path instead of a giant environment value', () => {
+  const config = loadBackendConfig({
+    ...valid,
+    CONTRACT_MANIFEST_JSON: '',
+    CONTRACT_MANIFEST_PATH: 'config/mainnet-contract-manifest.json',
+    INDEXER_START_BLOCK: '57826741',
+  });
+  assert.equal(config.contractManifest.contracts.length, 10);
+  assert.equal(config.contractManifest.economyActive, false);
+  assert.equal(config.contractManifest.currency, null);
+});
+
 test('backend config fails closed for wrong chain, insecure origin, weak secret, or deployer keys', () => {
   for (const override of [
     { ROBINHOOD_CHAIN_ID: '46630' },

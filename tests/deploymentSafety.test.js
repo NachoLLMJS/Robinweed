@@ -24,9 +24,14 @@ test('deployment rejects any pre-existing journal without a plan digest', () => 
 
 test('completed journal steps revalidate transaction, receipt, and call postcondition', () => {
   assert.match(deploy, /verifyCompletedStep/);
-  assert.match(deploy, /waitForTransaction\(step\.hash/);
-  assert.match(deploy, /verifyPostcondition/);
+  assert.match(deploy, /provider\.getTransaction\(step\.hash\)/);
+  assert.match(deploy, /provider\.waitForTransaction\(step\.hash,confirmations/);
   assert.match(deploy, /verifyCallPostcondition/);
+});
+
+test('a fresh broadcast waits for the indexed receipt before authenticating transaction identity', () => {
+  const complete = deploy.slice(deploy.indexOf('async function completeBroadcast'), deploy.indexOf('async function sendPrepared'));
+  assert.ok(complete.indexOf('provider.waitForTransaction') < complete.indexOf('provider.getTransaction'));
 });
 
 test('Railway example never contains a deployer key variable', () => {

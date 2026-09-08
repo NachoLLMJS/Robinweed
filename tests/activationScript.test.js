@@ -31,8 +31,10 @@ test('activation verifies token bytecode, every unconfigured initial state, and 
   assert.ok(source.indexOf('eth_simulateV1') < source.indexOf('atomicWrite(SAFE_BATCH_PATH'));
 });
 
-test('activation force-compiles and matches deployed runtimes to current artifacts with immutable masking', () => {
-  assert.match(source, /hardhat['"],\s*['"]compile['"],\s*['"]--force/);
+test('activation force-compiles portably and matches deployed runtimes to current artifacts with immutable masking', () => {
+  assert.match(source, /process\.execPath/);
+  assert.match(source, /node_modules\/hardhat\/dist\/src\/cli\.js/);
+  assert.match(source, /['"]compile['"],\s*['"]--force/);
   assert.match(source, /immutableReferences/);
   assert.match(source, /DEPLOYED_RUNTIME_ARTIFACT_MISMATCH/);
 });

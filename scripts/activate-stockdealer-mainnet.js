@@ -19,7 +19,7 @@ const tickerBytes=symbol=>`0x${Buffer.from(symbol).toString('hex').padEnd(64,'0'
 const stable=value=>Array.isArray(value)?value.map(stable):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,stable(value[key])])):value;
 const encode=(iface,method,args)=>iface.encodeFunctionData(method,args);
 const executeFile=promisify(execFile);
-async function ensureFreshBuild(){await executeFile(process.platform==='win32'?'npx.cmd':'npx',['hardhat','compile','--force'],{cwd:resolve('.')});}
+async function ensureFreshBuild(){await executeFile(process.execPath,[resolve('node_modules/hardhat/dist/src/cli.js'),'compile','--force'],{cwd:resolve('.')});}
 function maskImmutableReferences(bytecode,immutableReferences={}){const bytes=Buffer.from(bytecode.slice(2),'hex');for(const references of Object.values(immutableReferences))for(const {start,length}of references)bytes.fill(0,start,start+length);return`0x${bytes.toString('hex')}`;}
 function assertCurrentRuntime(name,runtimeCode,artifactValue){if(runtimeCode==='0x'||runtimeCode.length!==artifactValue.deployedBytecode.length||maskImmutableReferences(runtimeCode,artifactValue.immutableReferences).toLowerCase()!==artifactValue.deployedBytecode.toLowerCase())throw new Error(`DEPLOYED_RUNTIME_ARTIFACT_MISMATCH:${name}`);}
 
