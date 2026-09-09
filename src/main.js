@@ -200,6 +200,20 @@ const signX=(labelCanvas.width-signTotalWidth)/2;ctx.fillStyle='#eef5e8';ctx.fil
 const tex=new THREE.CanvasTexture(labelCanvas);tex.colorSpace=THREE.SRGBColorSpace;
 const sign=new THREE.Mesh(new THREE.PlaneGeometry(4.6,1.15),new THREE.MeshBasicMaterial({map:tex}));sign.position.set(-3.6,2.65,-7.83);scene.add(sign);
 
+// Transparent artwork sits directly on the right warehouse wall: no frame, plate or support geometry.
+const warehouseWallLogoTexture=new THREE.TextureLoader().load(ASSET_URLS.textures.warehouseWallLogo);
+warehouseWallLogoTexture.colorSpace=THREE.SRGBColorSpace;
+warehouseWallLogoTexture.anisotropy=renderer.capabilities.getMaxAnisotropy();
+const warehouseWallLogo=new THREE.Mesh(
+  new THREE.PlaneGeometry(WAREHOUSE_DECOR.wallLogo.size[0],WAREHOUSE_DECOR.wallLogo.size[1]),
+  new THREE.MeshBasicMaterial({map:warehouseWallLogoTexture,transparent:true,alphaTest:.02,depthWrite:false,toneMapped:false}),
+);
+warehouseWallLogo.position.set(...WAREHOUSE_DECOR.wallLogo.position);
+warehouseWallLogo.rotation.y=WAREHOUSE_DECOR.wallLogo.rotationY;
+warehouseWallLogo.renderOrder=2;
+scene.add(warehouseWallLogo);
+legacyWarehouseShell.push(warehouseWallLogo);
+
 function normalizeAsset(model,targetHeight){const bounds=new THREE.Box3().setFromObject(model);const size=bounds.getSize(new THREE.Vector3());const center=bounds.getCenter(new THREE.Vector3());const scale=targetHeight/size.y;model.scale.setScalar(scale);model.position.set(-center.x*scale,-bounds.min.y*scale,-center.z*scale);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const materials=Array.isArray(o.material)?o.material:[o.material];materials.forEach(material=>material.side=THREE.DoubleSide);}});const wrapper=new THREE.Group();wrapper.add(model);return wrapper;}
 console.info('Stockdealer · rectilinear warehouse shell retained after V3 wall QA');
 new GLTFLoader().load(ASSET_URLS.warehouse.growBench,gltf=>{const template=normalizeAsset(gltf.scene,.84);for(const station of WAREHOUSE_GROW_STATIONS){const bench=template.clone(true);bench.scale.x=.62;bench.position.set(station.x,0,station.z);scene.add(bench);}benchFallback.forEach(item=>item.visible=false);console.info('Stockdealer · eight Meshy V3 grow tables aligned with pots');},undefined,error=>console.warn('Stockdealer · grow bench fallback',error));

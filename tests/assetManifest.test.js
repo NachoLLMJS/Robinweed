@@ -63,6 +63,15 @@ test('approved warehouse props and complete city buildings use versioned GLBs', 
   assert.equal(ASSET_URLS.branding.mark, '/brands/robinhood-chain-mark.svg');
 });
 
+test('warehouse wall logo is a versioned square RGBA PNG', () => {
+  assert.equal(ASSET_URLS.textures.warehouseWallLogo, '/textures/warehouse/the-stock-dealer-wall-logo.png?v=1');
+  const png = readFileSync(new URL('../public/textures/warehouse/the-stock-dealer-wall-logo.png', import.meta.url));
+  assert.equal(png.subarray(1, 4).toString(), 'PNG');
+  assert.equal(png.readUInt32BE(16), 1254);
+  assert.equal(png.readUInt32BE(20), 1254);
+  assert.equal(png[25], 6, 'PNG color type must remain RGBA');
+});
+
 test('tokenized-stock seed packets use their approved versioned production GLBs', () => {
   assert.deepEqual(ASSET_URLS.items.stockSeedPacks, {
     MSFT: '/models-v26/items/stock-seed-packs/msft-seed-pack.glb?v=2',

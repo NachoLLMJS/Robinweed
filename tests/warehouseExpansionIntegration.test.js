@@ -10,6 +10,14 @@ test('warehouse board uses the supplied versioned pizarra artwork', () => {
   assert.match(main, /ASSET_URLS\.textures\.growthDiagram/);
 });
 
+test('warehouse right wall uses the supplied transparent logo directly as a decal', () => {
+  assert.equal(ASSET_URLS.textures.warehouseWallLogo, '/textures/warehouse/the-stock-dealer-wall-logo.png?v=1');
+  assert.match(main, /ASSET_URLS\.textures\.warehouseWallLogo/);
+  assert.match(main, /new THREE\.PlaneGeometry\(WAREHOUSE_DECOR\.wallLogo\.size\[0\],WAREHOUSE_DECOR\.wallLogo\.size\[1\]\)/);
+  assert.match(main, /transparent:true,alphaTest:\.02,depthWrite:false/);
+  assert.doesNotMatch(main, /wallLogoFrame|wallLogoContainer|wallLogoBacking/);
+});
+
 test('warehouse expansion includes the supplied versioned hydroponic tower without the removed gray duct', () => {
   assert.equal(ASSET_URLS.warehouse.soilPallet, '/models-v33/warehouse/soil-pallet.glb?v=1');
   assert.equal('hvacDuct' in ASSET_URLS.warehouse, false);

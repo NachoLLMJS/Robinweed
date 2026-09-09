@@ -70,6 +70,7 @@ export const ASSET_URLS = Object.freeze({
   }),
   textures: Object.freeze({
     growthDiagram: '/textures/warehouse/pizarra.png?v=1',
+    warehouseWallLogo: '/textures/warehouse/the-stock-dealer-wall-logo.png?v=1',
   }),
   branding: Object.freeze({
     mark: '/brands/robinhood-chain-mark.svg',

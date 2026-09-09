@@ -54,6 +54,9 @@ test('warehouse decor reserves floor corners, wall AC and elevated fans without 
     minX: 3.96, maxX: 6.54, minZ: 4.94, maxZ: 7.36,
   });
   assert.ok(WAREHOUSE_DECOR.hydroponicTower.collider.minX > 1.2, 'tower must leave the entrance aisle clear');
+  assert.deepEqual(WAREHOUSE_DECOR.wallLogo.position, [6.86, 2.15, -3.4]);
+  assert.deepEqual(WAREHOUSE_DECOR.wallLogo.size, [2.75, 2.75]);
+  assert.equal(WAREHOUSE_DECOR.wallLogo.rotationY, -Math.PI / 2);
 });
 
 test('lower shelf jars sit directly on the lower shelf instead of floating', () => {

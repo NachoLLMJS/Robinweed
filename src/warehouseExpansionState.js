@@ -26,6 +26,11 @@ export const WAREHOUSE_DECOR = Object.freeze({
     rotationY: 0,
     collider: Object.freeze({ minX: 3.96, maxX: 6.54, minZ: 4.94, maxZ: 7.36 }),
   }),
+  wallLogo: Object.freeze({
+    position: Object.freeze([6.86, 2.15, -3.4]),
+    size: Object.freeze([2.75, 2.75]),
+    rotationY: -Math.PI / 2,
+  }),
   airConditioner: Object.freeze({ position: Object.freeze([-6.67, 2.35, 5.05]), targetHeight: .82, rotationY: Math.PI / 2 }),
   fans: Object.freeze([
     Object.freeze({ position: Object.freeze([-6.67, 2.35, -1.0]), targetHeight: 1.45, rotationY: Math.PI / 2 }),
