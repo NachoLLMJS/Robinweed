@@ -10,12 +10,13 @@ test('warehouse board uses the supplied versioned pizarra artwork', () => {
   assert.match(main, /ASSET_URLS\.textures\.growthDiagram/);
 });
 
-test('warehouse expansion uses four versioned Meshy props without the removed gray duct', () => {
+test('warehouse expansion includes the supplied versioned hydroponic tower without the removed gray duct', () => {
   assert.equal(ASSET_URLS.warehouse.soilPallet, '/models-v33/warehouse/soil-pallet.glb?v=1');
   assert.equal('hvacDuct' in ASSET_URLS.warehouse, false);
   assert.equal(ASSET_URLS.warehouse.airConditioner, '/models-v34/warehouse/wall-air-conditioner.glb?v=1');
   assert.equal(ASSET_URLS.warehouse.exhaustFan, '/models-v33/warehouse/exhaust-fan.glb?v=1');
   assert.equal(ASSET_URLS.warehouse.recyclingBin, '/models-v33/warehouse/recycling-bin.glb?v=1');
+  assert.equal(ASSET_URLS.warehouse.hydroponicTower, '/models-v38/warehouse/hydroponic-tower.glb?v=1');
 });
 
 test('all eight warehouse stations share the canonical station layout', () => {
@@ -30,6 +31,8 @@ test('warehouse loads pallet, wall AC, fans and recycling bin from the manifest'
   assert.match(main, /loadWarehouseProp\(ASSET_URLS\.warehouse\.airConditioner/);
   assert.match(main, /loadWarehouseProp\(ASSET_URLS\.warehouse\.exhaustFan/);
   assert.match(main, /loadWarehouseProp\(ASSET_URLS\.warehouse\.recyclingBin/);
+  assert.match(main, /loadWarehouseProp\(ASSET_URLS\.warehouse\.hydroponicTower/);
+  assert.match(main, /WAREHOUSE_DECOR\.hydroponicTower\.collider/);
 });
 
 test('four glass jars receive a dense Meshy bud pile without colored bottom rings', () => {

@@ -223,7 +223,7 @@ function loadWarehouseProp(url,placements,label,mode='height'){
     list.forEach((placement,index)=>{
       const instance=index===0?template:template.clone(true);
       instance.position.set(...placement.position);instance.rotation.y=placement.rotationY??0;instance.userData.qaLabel=label;
-      scene.add(instance);warehouseExpansionObjects.push(instance);
+      instance.visible=warehouseVisibilityForLocation(state?.location).legacyInterior;scene.add(instance);warehouseExpansionObjects.push(instance);
     });
     console.info(`Stockdealer · Meshy warehouse ${label} loaded ×${list.length}`);
   },undefined,error=>console.warn(`Stockdealer · warehouse ${label} omitted`,error));
@@ -232,6 +232,7 @@ loadWarehouseProp(ASSET_URLS.warehouse.soilPallet,WAREHOUSE_DECOR.soilPallet,'so
 loadWarehouseProp(ASSET_URLS.warehouse.airConditioner,WAREHOUSE_DECOR.airConditioner,'wall air conditioner');
 loadWarehouseProp(ASSET_URLS.warehouse.exhaustFan,WAREHOUSE_DECOR.fans,'exhaust fan');
 loadWarehouseProp(ASSET_URLS.warehouse.recyclingBin,WAREHOUSE_DECOR.recyclingBin,'recycling bin');
+loadWarehouseProp(ASSET_URLS.warehouse.hydroponicTower,WAREHOUSE_DECOR.hydroponicTower,'hydroponic tower');
 const roadMaterial=new THREE.MeshStandardMaterial({color:0x242827,roughness:.98});
 const curbMaterial=new THREE.MeshStandardMaterial({color:0x999d91,roughness:1});
 const grassMaterials=[
@@ -622,6 +623,7 @@ const collisionObstaclesByLocation={
     {minX:3.4,maxX:6,minZ:-6.1,maxZ:-5.25},
     {minX:4.1,maxX:5.5,minZ:-5.4,maxZ:-4},
     {minX:-.48,maxX:.48,minZ:.77,maxZ:1.73},
+    WAREHOUSE_DECOR.hydroponicTower.collider,
   ],
   street:[
     shopLayout.obstacle,

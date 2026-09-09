@@ -17,6 +17,7 @@ test('approved warehouse props and complete city buildings use versioned GLBs', 
     airConditioner: '/models-v34/warehouse/wall-air-conditioner.glb?v=1',
     exhaustFan: '/models-v33/warehouse/exhaust-fan.glb?v=1',
     recyclingBin: '/models-v33/warehouse/recycling-bin.glb?v=1',
+    hydroponicTower: '/models-v38/warehouse/hydroponic-tower.glb?v=1',
   });
   assert.deepEqual(ASSET_URLS.city, {
     shop: '/models-v23/city-pack/residential-9004-house.glb?v=1',
@@ -120,6 +121,17 @@ test('approved V33 sidewalk cat stays a compact textured low-poly seated asset',
   const position = document.accessors[document.meshes[0].primitives[0].attributes.POSITION];
   assert.deepEqual(position.min, [-0.37304699420928955, -0.5, -0.47070300579071045]);
   assert.deepEqual(position.max, [0.375, 0.5, 0.4726560115814209]);
+});
+
+test('supplied hydroponic tower remains a textured static GLB', () => {
+  const glb = readFileSync(new URL('../public/models-v38/warehouse/hydroponic-tower.glb', import.meta.url));
+  assert.equal(glb.subarray(0, 4).toString(), 'glTF');
+  const jsonLength = glb.readUInt32LE(12);
+  const document = JSON.parse(glb.subarray(20, 20 + jsonLength).toString().replace(/\0+$/g, '').trim());
+  assert.ok(document.meshes.length > 0);
+  assert.ok(document.materials.length > 0);
+  assert.ok(document.images.length > 0);
+  assert.equal(document.animations?.length ?? 0, 0);
 });
 
 test('Vlad v37 uses separate rigged low-poly clips without the unwanted back mark', () => {

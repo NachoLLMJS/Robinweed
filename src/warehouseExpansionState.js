@@ -20,6 +20,12 @@ export function stationCollider({ x, z }) {
 export const WAREHOUSE_DECOR = Object.freeze({
   soilPallet: Object.freeze({ position: Object.freeze([-5.35, 0, 3.25]), targetHeight: 1.25, rotationY: Math.PI / 2 }),
   recyclingBin: Object.freeze({ position: Object.freeze([5.65, 0, 3.45]), targetHeight: 1.45, rotationY: -Math.PI / 2 }),
+  hydroponicTower: Object.freeze({
+    position: Object.freeze([5.25, 0, 6.15]),
+    targetHeight: 3.15,
+    rotationY: 0,
+    collider: Object.freeze({ minX: 3.96, maxX: 6.54, minZ: 4.94, maxZ: 7.36 }),
+  }),
   airConditioner: Object.freeze({ position: Object.freeze([-6.67, 2.35, 5.05]), targetHeight: .82, rotationY: Math.PI / 2 }),
   fans: Object.freeze([
     Object.freeze({ position: Object.freeze([-6.67, 2.35, -1.0]), targetHeight: 1.45, rotationY: Math.PI / 2 }),

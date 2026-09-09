@@ -12,6 +12,7 @@ export const ASSET_URLS = Object.freeze({
     airConditioner: '/models-v34/warehouse/wall-air-conditioner.glb?v=1',
     exhaustFan: '/models-v33/warehouse/exhaust-fan.glb?v=1',
     recyclingBin: '/models-v33/warehouse/recycling-bin.glb?v=1',
+    hydroponicTower: '/models-v38/warehouse/hydroponic-tower.glb?v=1',
   }),
   city: Object.freeze({
     shop: '/models-v23/city-pack/residential-9004-house.glb?v=1',
