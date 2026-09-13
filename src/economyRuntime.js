@@ -16,7 +16,7 @@ const HASH = /^0x[0-9a-fA-F]{64}$/;
 const DECIMAL = /^(?:0|[1-9]\d*)$/;
 const SYMBOLS = Object.freeze(['AAPL', 'GOOGL', 'MSFT', 'MSTR', 'NVDA', 'QQQ', 'TSLA']);
 const QUOTE_WINDOW_SECONDS = 300;
-const MAX_QUOTE_BLOCK_AGE = 20;
+const MAX_QUOTE_AGE_SECONDS = 60;
 const HOUSE_CAPACITY = new Map(HOUSE_PROPERTIES.map(property => [onchainPropertyId(property.id), property.capacity]));
 const explicitWalletRejection = error => error?.code === 4001 || error?.code === 'ACTION_REJECTED' || /user rejected/i.test(error?.message ?? '');
 
@@ -59,8 +59,9 @@ async function assertQuoteFresh(ethereum, quote) {
   if (!quotedBlock || quantity(quotedBlock.number) !== quote.quoteBlock || quotedBlock.hash?.toLowerCase() !== quote.quoteBlockHash.toLowerCase() || quantity(quotedBlock.timestamp) !== quote.quoteBlockTimestamp) throw new Error('QUOTE_BLOCK_CHANGED');
   if (!latestBlock) throw new Error('QUOTE_STALE');
   const latestNumber = quantity(latestBlock.number);
-  if (latestNumber < quote.quoteBlock || latestNumber - quote.quoteBlock > MAX_QUOTE_BLOCK_AGE) throw new Error('QUOTE_STALE');
-  if (quantity(latestBlock.timestamp) >= quote.deadline) throw new Error('QUOTE_EXPIRED');
+  const latestTimestamp = quantity(latestBlock.timestamp);
+  if (latestNumber < quote.quoteBlock || latestTimestamp < quote.quoteBlockTimestamp || latestTimestamp - quote.quoteBlockTimestamp > MAX_QUOTE_AGE_SECONDS) throw new Error('QUOTE_STALE');
+  if (latestTimestamp >= quote.deadline) throw new Error('QUOTE_EXPIRED');
 }
 
 function positiveDecimal(value) {

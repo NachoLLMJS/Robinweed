@@ -24,6 +24,30 @@ test('house quote derives each basket minimum from exact 60 percent allocations'
   assert.deepEqual(quote, { houseId: 2, chainId: 4663, gameCore: '0x6666666666666666666666666666666666666666', economyRouter: '0x7777777777777777777777777777777777777777', currency: '0x1111111111111111111111111111111111111111', quoteBlock: 456, quoteBlockHash, quoteBlockTimestamp: 700, deadline: 1000, capacity: 8, totalPrice: '100', tickers: [aapl, msft], quotedStockOuts: ['60', '60'], minimumOuts: ['60', '60'] });
 });
 
+test('house quote starts independent basket route simulations concurrently', async () => {
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  const started = [];
+  const work = quoteHousePurchase({
+    houseId: 2,
+    slippageBps: 100,
+    gameCore,
+    router,
+    adapterFor: () => adapter,
+    quoter,
+    quoteContext,
+    quoteRoute: async ({ target, amountIn }) => {
+      started.push(target);
+      await gate;
+      return amountIn * 2n;
+    },
+  });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.equal(started.length, 2);
+  release();
+  await work;
+});
+
 test('house quote rejects sold, unavailable, invalid or unquotable houses', async () => {
   await assert.rejects(quoteHousePurchase({ houseId: 0, slippageBps: 100, gameCore, router, adapterFor: () => adapter, quoter, quoteContext }));
   await assert.rejects(quoteHousePurchase({ houseId: 3, slippageBps: 100, gameCore, router, adapterFor: () => adapter, quoter, quoteContext }));

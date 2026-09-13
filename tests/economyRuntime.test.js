@@ -55,11 +55,23 @@ test('seed purchase pins the quote block and exact 300-second deadline before ap
   assert.deepEqual(ethereum.calls.map(call => call.params[0]), ['0x64', 'latest', '0x64', 'latest']);
 });
 
+test('seed purchase accepts a recent official-RPC quote despite Robinhood producing more than twenty blocks during route simulation', async () => {
+  const calls = [];
+  const ethereum = quoteProvider({ latestNumber: 165, latestTimestamp: 1006 });
+  await executeSeedPurchase({ symbol: 'MSFT', account, config, ethereum, storage: makeStorage(), locks,
+    fetchImpl: async () => ({ ok: true, json: async () => seedQuote() }),
+    approve: async () => { calls.push('approve'); return null; },
+    send: async () => { calls.push('send'); return `0x${'b'.repeat(64)}`; },
+    waitCanonical: async () => ({ status: '0x1' }),
+  });
+  assert.deepEqual(calls, ['approve', 'send']);
+});
+
 test('seed purchase fails closed before approval for an altered, stale, or expired quote block', async () => {
   for (const ethereum of [
     quoteProvider({ quoteHash: `0x${'7'.repeat(64)}` }),
     quoteProvider({ quoteTimestamp: 999 }),
-    quoteProvider({ latestNumber: 121 }),
+    quoteProvider({ latestNumber: 165, latestTimestamp: 1061 }),
     quoteProvider({ latestTimestamp: 1300 }),
   ]) {
     let approved = false;

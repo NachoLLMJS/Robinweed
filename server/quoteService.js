@@ -78,25 +78,29 @@ async function quoteHousePurchaseWork({ houseId, slippageBps, gameCore, router, 
   const currency = await router.currency(block);
   const rewardInput = price * REWARD_BPS / BPS;
   let allocated = 0n;
-  const quotedStockOuts = [];
-  const minimumOuts = [];
+  const routeQuotes = [];
   for (let index = 0; index < tickers.length; index += 1) {
-    const [stockToken,routeVault, adapterAddress, enabled] = await router.routes(tickers[index], block);
-    if (!enabled) throw new Error('ROUTE_NOT_READY');
     const routeInput = index + 1 === tickers.length ? rewardInput - allocated : rewardInput * weights[index] / BPS;
     allocated += routeInput;
     if (routeInput <= 0n) throw new Error('ZERO_ROUTE_INPUT');
-    const path = await adapterFor(adapterAddress).pathFor(currency, stockToken, block);
-    if (!/^0x[0-9a-fA-F]{6,}$/.test(path) || path.length % 2 !== 0) throw new Error('PATH_NOT_READY');
-    const result = quoteRoute
-      ? await quoteRoute({ currency, target:stockToken, adapterAddress, amountIn:routeInput, receiver:routeVault, deadline:context.deadline, blockTag:context.quoteBlock, path })
-      : await quoter.quoteExactInput.staticCall(path, routeInput, block);
-    const output = Array.isArray(result) ? result[0] : result;
-    const minimum = (output * (BPS - BigInt(slippageBps)) + BPS - 1n) / BPS;
-    if (output <= 0n || minimum <= 0n) throw new Error('ZERO_QUOTE');
-    quotedStockOuts.push(output.toString());
-    minimumOuts.push(minimum.toString());
+    const ticker = tickers[index];
+    routeQuotes.push((async () => {
+      const [stockToken, routeVault, adapterAddress, enabled] = await router.routes(ticker, block);
+      if (!enabled) throw new Error('ROUTE_NOT_READY');
+      const path = await adapterFor(adapterAddress).pathFor(currency, stockToken, block);
+      if (!/^0x[0-9a-fA-F]{6,}$/.test(path) || path.length % 2 !== 0) throw new Error('PATH_NOT_READY');
+      const result = quoteRoute
+        ? await quoteRoute({ currency, target:stockToken, adapterAddress, amountIn:routeInput, receiver:routeVault, deadline:context.deadline, blockTag:context.quoteBlock, path })
+        : await quoter.quoteExactInput.staticCall(path, routeInput, block);
+      const output = Array.isArray(result) ? result[0] : result;
+      const minimum = (output * (BPS - BigInt(slippageBps)) + BPS - 1n) / BPS;
+      if (output <= 0n || minimum <= 0n) throw new Error('ZERO_QUOTE');
+      return [output.toString(), minimum.toString()];
+    })());
   }
+  const settledRoutes = await Promise.all(routeQuotes);
+  const quotedStockOuts = settledRoutes.map(([output]) => output);
+  const minimumOuts = settledRoutes.map(([, minimum]) => minimum);
   return Object.freeze({ houseId, chainId: 4663, gameCore: context.gameCore, economyRouter: context.economyRouter, currency: getAddress(currency), quoteBlock: context.quoteBlock, quoteBlockHash: context.quoteBlockHash, quoteBlockTimestamp: context.quoteBlockTimestamp, deadline: context.deadline, capacity: Number(capacity), totalPrice: price.toString(), tickers, quotedStockOuts, minimumOuts });
 }
 
