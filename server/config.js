@@ -40,6 +40,7 @@ const schema = z.object({
   SESSION_SECRET: z.string().min(32),
   PUBLIC_APP_ORIGIN: productionOrigin,
   ROBINHOOD_CHAIN_ID: z.literal('4663'),
+  ROBINHOOD_RPC_QUOTE: z.literal('https://rpc.mainnet.chain.robinhood.com'),
   ROBINHOOD_RPC_PRIMARY: httpsUrl,
   ROBINHOOD_RPC_SECONDARY: httpsUrl,
   CONTRACT_MANIFEST_JSON: z.string().transform((value, context) => {
@@ -88,6 +89,7 @@ export function loadBackendConfig(environment = process.env) {
     sessionSecret: value.SESSION_SECRET,
     publicOrigin: value.PUBLIC_APP_ORIGIN,
     chainId: 4663,
+    rpcQuote: value.ROBINHOOD_RPC_QUOTE,
     rpcPrimary: value.ROBINHOOD_RPC_PRIMARY,
     rpcSecondary: value.ROBINHOOD_RPC_SECONDARY,
     contractManifest: value.CONTRACT_MANIFEST_JSON,

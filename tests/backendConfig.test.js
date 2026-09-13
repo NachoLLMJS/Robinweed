@@ -10,6 +10,7 @@ const valid = {
   SESSION_SECRET: 'x'.repeat(48),
   PUBLIC_APP_ORIGIN: 'https://stockdealer.example',
   ROBINHOOD_CHAIN_ID: '4663',
+  ROBINHOOD_RPC_QUOTE: 'https://rpc.mainnet.chain.robinhood.com',
   ROBINHOOD_RPC_PRIMARY: 'https://primary.example/v2/key',
   ROBINHOOD_RPC_SECONDARY: 'https://secondary.example/key',
   CONTRACT_MANIFEST_JSON: '{"chainId":4663,"economyActive":false,"currency":null,"contracts":[]}',
@@ -22,6 +23,7 @@ test('backend config accepts only complete Robinhood Chain Mainnet production se
   assert.equal(config.chainId, 4663);
   assert.equal(config.port, 3000);
   assert.equal(config.publicOrigin, 'https://stockdealer.example');
+  assert.equal(config.rpcQuote, 'https://rpc.mainnet.chain.robinhood.com');
 });
 
 test('backend loads the versioned mainnet manifest from a repository path instead of a giant environment value', () => {
@@ -39,6 +41,7 @@ test('backend loads the versioned mainnet manifest from a repository path instea
 test('backend config fails closed for wrong chain, insecure origin, weak secret, or deployer keys', () => {
   for (const override of [
     { ROBINHOOD_CHAIN_ID: '46630' },
+    { ROBINHOOD_RPC_QUOTE: 'https://robinhood-mainnet.drpc.org' },
     { PUBLIC_APP_ORIGIN: 'http://stockdealer.example' },
     { PUBLIC_APP_ORIGIN: 'https://stockdealer.example/' },
     { ROBINHOOD_RPC_SECONDARY: valid.ROBINHOOD_RPC_PRIMARY },

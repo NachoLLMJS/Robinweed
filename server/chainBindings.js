@@ -23,6 +23,7 @@ const QUOTER_ABI = ['function quoteExactInput(bytes path,uint256 amountIn) retur
 const QUOTER = '0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7';
 
 const createProvider = config => new JsonRpcProvider(config.rpcPrimary, 4663, { staticNetwork: true, batchMaxCount: 1 });
+const createQuoteProvider = config => new JsonRpcProvider(config.rpcQuote, 4663, { staticNetwork: true, batchMaxCount: 1 });
 
 export function serializeRpcReads(operation) {
   let tail = Promise.resolve();
@@ -36,9 +37,9 @@ export function serializeRpcReads(operation) {
 function bindings(config) {
   if (config?.publicConfig?.economyActive !== true) return null;
   const byName = new Map((config.publicConfig.contracts ?? []).map(contract => [contract.name, contract.address]));
-  if (!byName.get('GameCore') || !byName.get('EconomyRouter') || !config.rpcPrimary) return null;
+  if (!byName.get('GameCore') || !byName.get('EconomyRouter') || !config.rpcQuote) return null;
   try {
-    const provider = createProvider(config);
+    const provider = createQuoteProvider(config);
     const adapters = new Map();
     const gameCoreAddress = getAddress(byName.get('GameCore'));
     const economyRouterAddress = getAddress(byName.get('EconomyRouter'));

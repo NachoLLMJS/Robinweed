@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path';
 const project='30145f86-77c0-4283-8854-8f631007d94c',environment='production';
 const manifest=JSON.parse(readFileSync('config/mainnet-contract-manifest.json','utf8'));
 const indexerStartBlock=String(Math.min(...manifest.contracts.map(entry=>entry.deploymentBlock)));
-const shared={NODE_ENV:'production',DATABASE_URL:'${{Postgres.DATABASE_URL}}',DATABASE_SSL_MODE:'private',SESSION_SECRET:randomBytes(48).toString('base64url'),PUBLIC_APP_ORIGIN:'https://web-production-a33d80.up.railway.app',ROBINHOOD_CHAIN_ID:'4663',ROBINHOOD_RPC_PRIMARY:'https://robinhood-mainnet.drpc.org',ROBINHOOD_RPC_SECONDARY:'https://rpc.ordofi.network',CONTRACT_MANIFEST_PATH:'config/mainnet-contract-manifest.json',INDEXER_START_BLOCK:indexerStartBlock,FINALITY_MODE:'corroborated-finalized-tag',LOG_LEVEL:'info'};
+const shared={NODE_ENV:'production',DATABASE_URL:'${{Postgres.DATABASE_URL}}',DATABASE_SSL_MODE:'private',SESSION_SECRET:randomBytes(48).toString('base64url'),PUBLIC_APP_ORIGIN:'https://web-production-a33d80.up.railway.app',ROBINHOOD_CHAIN_ID:'4663',ROBINHOOD_RPC_QUOTE:'https://rpc.mainnet.chain.robinhood.com',ROBINHOOD_RPC_PRIMARY:'https://robinhood-mainnet.drpc.org',ROBINHOOD_RPC_SECONDARY:'https://rpc.ordofi.network',CONTRACT_MANIFEST_PATH:'config/mainnet-contract-manifest.json',INDEXER_START_BLOCK:indexerStartBlock,FINALITY_MODE:'corroborated-finalized-tag',LOG_LEVEL:'info'};
 const npxCli=join(dirname(process.execPath),'node_modules','npm','bin','npx-cli.js');
 for(const service of ['web','indexer']){
   const values={...shared,FLY_ROLE:service};

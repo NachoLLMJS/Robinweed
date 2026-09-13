@@ -14,6 +14,12 @@ test('quote bindings pin Robinhood mainnet and the official QuoterV2', () => {
   assert.match(source, /0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7/i);
 });
 
+test('purchase quotes use the wallet-default official Robinhood RPC independently from indexer RPCs', () => {
+  const source = readFileSync(new URL('../server/chainBindings.js', import.meta.url), 'utf8');
+  assert.match(source, /createQuoteProvider\s*=\s*config\s*=>[^;]*config\.rpcQuote/);
+  assert.match(source, /function bindings[\s\S]*createQuoteProvider\(config\)/);
+});
+
 test('read-only wallet state bindings remain available while purchases are paused and bound RPC batches', () => {
   assert.match(readFileSync(new URL('../server/chainBindings.js', import.meta.url), 'utf8'), /batchMaxCount:\s*1/);
   const contracts = ['GameCore','Vault_AAPL','Vault_GOOGL','Vault_MSFT','Vault_MSTR','Vault_NVDA','Vault_QQQ','Vault_TSLA']
