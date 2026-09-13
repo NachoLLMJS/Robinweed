@@ -19,6 +19,7 @@ const ALLOWED_ACTIONS = new Set(['buySeedPacks', 'buyHouse', 'plant', 'water', '
 const TRANSACTION_HASH = /^0x[0-9a-fA-F]{64}$/;
 
 function rpcQuantity(value, errorCode) {
+  if (Number.isSafeInteger(value) && value >= 0) return value;
   if (typeof value !== 'string' || !/^0x[0-9a-fA-F]+$/.test(value)) throw new Error(errorCode);
   const parsed = Number(BigInt(value));
   if (!Number.isSafeInteger(parsed)) throw new Error(errorCode);

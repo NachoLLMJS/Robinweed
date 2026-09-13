@@ -71,6 +71,27 @@ test('currency approval targets only the configured token and EconomyRouter for 
   assert.match(sent.data, /^0x095ea7b3/);
 });
 
+test('currency approval accepts safe integer quantities returned by the injected wallet', async () => {
+  const ethereum = walletProvider();
+  ethereum.request = async request => {
+    ethereum.calls.push(request);
+    if (request.method === 'eth_chainId') return '0x1237';
+    if (request.method === 'eth_accounts') return [account];
+    if (request.method === 'eth_call') return `0x${'0'.repeat(64)}`;
+    if (request.method === 'eth_getTransactionCount') return 253;
+    if (request.method === 'eth_blockNumber') return 62_315_252;
+    if (request.method === 'eth_sendTransaction') return `0x${'c'.repeat(64)}`;
+    throw new Error('unexpected method');
+  };
+  const approvalConfig = { ...config, currency: '0x3333333333333333333333333333333333333333', contracts: [...config.contracts, { name: 'EconomyRouter', address: '0x4444444444444444444444444444444444444444' }] };
+  let prepared;
+  await approveCurrencyIfNeeded({ ethereum, config: approvalConfig, account, amount: 100n, onPrepared: value => { prepared = value; } });
+  assert.equal(prepared.nonce, 253);
+  assert.equal(prepared.preparedBlock, 62_315_252);
+  assert.equal(ethereum.calls.at(-1).method, 'eth_sendTransaction');
+  assert.equal(ethereum.calls.at(-1).params[0].nonce, '0xfd');
+});
+
 test('receipt waiter rejects reverts and only resolves a canonical receipt after twelve confirmations', async () => {
   let receiptPolls = 0;
   let latestPolls = 0;
