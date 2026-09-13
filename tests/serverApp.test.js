@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import request from 'supertest';
 import http from 'node:http';
 import { Wallet } from 'ethers';
-import { createApiApp } from '../server/app.js';
+import { createApiApp, DEFAULT_QUOTE_TIMEOUT_MS } from '../server/app.js';
+
+assert.equal(DEFAULT_QUOTE_TIMEOUT_MS, 30_000);
 
 function memoryRepository() {
   const challenges = new Map();

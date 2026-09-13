@@ -39,7 +39,9 @@ async function runTimedOperation(request, timeoutMs, timeoutCode, operation) {
   }
 }
 
-export function createApiApp({ config, repository, quoteSeed = null, quoteHouse = null, readGameState = null, walletProvider = null, quoteTimeoutMs = 8_000, stateTimeoutMs = 8_000 }) {
+export const DEFAULT_QUOTE_TIMEOUT_MS = 30_000;
+
+export function createApiApp({ config, repository, quoteSeed = null, quoteHouse = null, readGameState = null, walletProvider = null, quoteTimeoutMs = DEFAULT_QUOTE_TIMEOUT_MS, stateTimeoutMs = 8_000 }) {
   if (!Number.isInteger(quoteTimeoutMs) || quoteTimeoutMs < 1 || quoteTimeoutMs > 30_000 || !Number.isInteger(stateTimeoutMs) || stateTimeoutMs < 1 || stateTimeoutMs > 30_000) throw new Error('INVALID_RPC_TIMEOUT');
   const app = express();
   app.disable('x-powered-by');
