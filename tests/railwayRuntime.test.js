@@ -6,6 +6,7 @@ const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.me
 const railway = readFileSync(new URL('../railway.toml', import.meta.url), 'utf8');
 const railwayIndexer = readFileSync(new URL('../railway.indexer.toml', import.meta.url), 'utf8');
 const server = readFileSync(new URL('../server/index.js', import.meta.url), 'utf8');
+const launcher = readFileSync(new URL('../server/start.js', import.meta.url), 'utf8');
 
 test('Railway pins a Vite-compatible Node runtime and never repeats npm ci inside the build phase', () => {
   assert.match(packageJson.engines?.node ?? '', />=22\.12\.0/);
@@ -16,8 +17,10 @@ test('Railway pins a Vite-compatible Node runtime and never repeats npm ci insid
 });
 
 test('Railway starts the production API only after its idempotent database migration', () => {
-  assert.equal(packageJson.scripts.start, 'node server/index.js');
+  assert.equal(packageJson.scripts.start, 'node server/start.js');
   assert.match(railway, /startCommand = "npm run db:migrate && npm start"/);
+  assert.match(launcher, /FLY_ROLE/);
+  assert.match(launcher, /import\('\.\/indexer\.js'\)/);
   assert.doesNotMatch(railway, /preDeployCommand/);
   assert.match(server, /listen\(config\.port, '0\.0\.0\.0'/);
   assert.match(server, /SIGTERM/);

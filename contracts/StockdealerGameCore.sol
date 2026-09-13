@@ -41,6 +41,7 @@ contract StockdealerGameCore is Ownable2Step, ReentrancyGuard {
     uint32 public constant MAX_PACKS_PER_PURCHASE = 100;
     uint256 public constant GROWTH_INTERVAL = 2 hours;
     uint8 public constant MATURE_STAGE = 5;
+    uint8 public constant DEFAULT_WAREHOUSE_CAPACITY = 8;
 
     struct SeedSku {
         uint256 packPrice;
@@ -71,6 +72,7 @@ contract StockdealerGameCore is Ownable2Step, ReentrancyGuard {
     mapping(uint32 houseId => House house) public houses;
     mapping(uint32 houseId => address owner) public houseOwner;
     mapping(uint32 houseId => mapping(uint8 plotId => Plant plant)) public plants;
+    mapping(address player => mapping(uint8 plotId => Plant plant)) public warehousePlants;
     uint256 private nextPositionNonce;
     bytes32[] private houseBasketTickers;
     uint16[] private houseBasketWeights;
@@ -108,6 +110,9 @@ contract StockdealerGameCore is Ownable2Step, ReentrancyGuard {
     event SeedPlanted(address indexed owner, uint32 indexed houseId, uint8 indexed plotId, bytes32 ticker, bytes32 rewardPosition);
     event PlantWatered(address indexed owner, uint32 indexed houseId, uint8 indexed plotId, uint64 wateredAt);
     event HarvestClaimed(address indexed owner, uint32 indexed houseId, uint8 indexed plotId, bytes32 ticker, uint256 rawAssets);
+    event WarehouseSeedPlanted(address indexed owner, uint8 indexed plotId, bytes32 indexed ticker, bytes32 rewardPosition);
+    event WarehousePlantWatered(address indexed owner, uint8 indexed plotId, uint64 wateredAt);
+    event WarehouseHarvestClaimed(address indexed owner, uint8 indexed plotId, bytes32 indexed ticker, uint256 rawAssets);
 
     constructor(address initialOwner, address economyRouter_) Ownable(initialOwner) {
         if (block.chainid != ROBINHOOD_MAINNET_CHAIN_ID) revert WrongChain();
@@ -185,6 +190,48 @@ contract StockdealerGameCore is Ownable2Step, ReentrancyGuard {
         uint32 seedCount = sku.seedsPerPack * packs;
         IGameRewardVault(sku.rewardVault).creditPack(msg.sender, seedCount, rawStockCredit);
         emit SeedPacksPurchased(msg.sender, ticker, packs, seedCount, totalPrice, rawStockCredit);
+    }
+
+    function plantWarehouse(uint8 plotId, bytes32 ticker) external nonReentrant returns (bytes32 positionId) {
+        if (gameplayPaused) revert GameplayIsPaused();
+        if (plotId >= DEFAULT_WAREHOUSE_CAPACITY) revert InvalidPlot();
+        if (warehousePlants[msg.sender][plotId].ticker != bytes32(0)) revert PlotOccupied();
+        SeedSku memory sku = seedSkus[ticker];
+        if (!sku.configured) revert SkuUnavailable();
+        positionId = keccak256(abi.encode(block.chainid, address(this), msg.sender, bytes32("WAREHOUSE"), plotId, ++nextPositionNonce));
+        IGameRewardVault(sku.rewardVault).consumeSeed(msg.sender, positionId);
+        warehousePlants[msg.sender][plotId] = Plant(ticker, uint64(block.timestamp), 0, positionId, sku.rewardVault);
+        emit WarehouseSeedPlanted(msg.sender, plotId, ticker, positionId);
+    }
+
+    function waterWarehouse(uint8 plotId) external {
+        if (gameplayPaused) revert GameplayIsPaused();
+        if (plotId >= DEFAULT_WAREHOUSE_CAPACITY) revert InvalidPlot();
+        Plant storage crop = warehousePlants[msg.sender][plotId];
+        if (crop.ticker == bytes32(0)) revert PlotEmpty();
+        if (crop.wateredAt != 0) revert AlreadyWatered();
+        crop.wateredAt = uint64(block.timestamp);
+        emit WarehousePlantWatered(msg.sender, plotId, crop.wateredAt);
+    }
+
+    function warehousePlantStage(address player, uint8 plotId) public view returns (uint8) {
+        if (plotId >= DEFAULT_WAREHOUSE_CAPACITY) return 0;
+        Plant memory crop = warehousePlants[player][plotId];
+        if (crop.ticker == bytes32(0)) return 0;
+        if (crop.wateredAt == 0) return 1;
+        uint256 transitions = (block.timestamp - crop.wateredAt) / GROWTH_INTERVAL;
+        return uint8(transitions >= 4 ? MATURE_STAGE : 1 + transitions);
+    }
+
+    function claimWarehouseHarvest(uint8 plotId, address recipient) external nonReentrant returns (uint256 rawAssets) {
+        if (claimsPaused) revert ClaimsArePaused();
+        if (plotId >= DEFAULT_WAREHOUSE_CAPACITY || recipient == address(0)) revert InvalidConfiguration();
+        Plant memory crop = warehousePlants[msg.sender][plotId];
+        if (crop.ticker == bytes32(0)) revert PlotEmpty();
+        if (warehousePlantStage(msg.sender, plotId) != MATURE_STAGE) revert NotMature();
+        delete warehousePlants[msg.sender][plotId];
+        rawAssets = IGameRewardVault(crop.fundingVault).release(crop.rewardPosition, recipient);
+        emit WarehouseHarvestClaimed(msg.sender, plotId, crop.ticker, rawAssets);
     }
 
     function buyHouse(

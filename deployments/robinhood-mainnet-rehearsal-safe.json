@@ -1,0 +1,34 @@
+{
+  "status": "completed",
+  "chainId": 4663,
+  "owner": "0x53109fe9A2DE96E6bC0b681713BaE6BE2B78765F",
+  "factory": "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67",
+  "factoryCodeHash": "0x50c3cdc4074750a7a974204a716c999edd37482f907608d960b2b025ee0b3317",
+  "singleton": "0x41675C099F32341bf84BFc5382aF534df5C7461a",
+  "singletonCodeHash": "0x1fe2df852ba3299d6534ef416eefa406e56ced995bca886ab7a553e6d0c5e1c4",
+  "predictedAddress": "0xA5fFD738A6d0fE8642eDc2762555Aaf1e2a48F8F",
+  "saltNonce": "55663181138395426932281376706934410893778236264313581571123648809709920299175",
+  "nonce": 48,
+  "dataHash": "0xd68ced10cea533b752d9f8db79fcade58ebb4cc95b687d4c13a5c77db9be9f7c",
+  "gasLimit": "287859",
+  "preparedBlock": 62097019,
+  "txHash": "0x8fd727ce931163d87881b6428353059cf9630606b8808abb645b48ed0c5f7fb4",
+  "blockNumber": 62097029,
+  "attestation": {
+    "address": "0xA5fFD738A6d0fE8642eDc2762555Aaf1e2a48F8F",
+    "proxyCodeHash": "0xd7d408ebcd99b2b70be43e20253d6d92a8ea8fab29bd3be7f55b10032331fb4c",
+    "singleton": "0x41675C099F32341bf84BFc5382aF534df5C7461a",
+    "singletonCodeHash": "0x1fe2df852ba3299d6534ef416eefa406e56ced995bca886ab7a553e6d0c5e1c4",
+    "factory": "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67",
+    "factoryCodeHash": "0x50c3cdc4074750a7a974204a716c999edd37482f907608d960b2b025ee0b3317",
+    "version": "1.4.1",
+    "owners": [
+      "0x53109fe9A2DE96E6bC0b681713BaE6BE2B78765F"
+    ],
+    "threshold": "1",
+    "modules": [],
+    "guard": "0x0000000000000000000000000000000000000000",
+    "nonce": "0",
+    "deploymentTxHash": "0x8fd727ce931163d87881b6428353059cf9630606b8808abb645b48ed0c5f7fb4"
+  }
+}

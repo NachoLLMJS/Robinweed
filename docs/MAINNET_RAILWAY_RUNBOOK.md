@@ -6,8 +6,8 @@ Status: source-ready, not deployed. Robinhood Chain Mainnet only (`chainId 4663`
 
 Never commit or paste these values into chat:
 
-- `C:\Users\nacho\Desktop\STOCKDEALER_MAINNET_DEPLOY.env`
-- `C:\Users\nacho\Desktop\STOCKDEALER_MAINNET_ACTIVATION.json`
+- `%USERPROFILE%\Desktop\Archivos organizados\Configuracion y datos\STOCKDEALER_MAINNET_DEPLOY.env`
+- `%USERPROFILE%\Desktop\Archivos organizados\Configuracion y datos\STOCKDEALER_MAINNET_ACTIVATION.json`
 
 The activation JSON contains public configuration but is kept external so incomplete or operator-edited prices/routes cannot silently enter a release commit.
 
@@ -53,6 +53,60 @@ HOOD remains unavailable until Robinhood publishes a canonical HOOD Stock Token 
    - activate Router;
    - enable purchases last.
 8. Read every postcondition back from mainnet before setting Railway `economyActive=true`.
+
+## Pons V2 foundation and Safe gate
+
+Pons-launched currencies must use `scripts/deploy-robinhood-mainnet-v2.js` and
+`scripts/activate-stockdealer-mainnet-v2.js`; the V1 Uniswap-only foundation
+cannot sell a token that is still on its bonding curve.
+
+Before either V2 script can produce an executable artifact, the external env
+must identify a deployed Safe rather than an EOA:
+
+- `EXPECTED_DEPLOYER_ADDRESS`: mandatory exact EOA derived from the deployment key; contract deployers are rejected;
+- `ADMIN_MULTISIG_ADDRESS`: deployed Safe proxy on chain 4663;
+- `ADMIN_SAFE_CODE_HASH`: exact runtime code hash independently read from that proxy;
+- `ADMIN_SAFE_SINGLETON_ADDRESS` and `ADMIN_SAFE_SINGLETON_CODE_HASH`: exact singleton stored in proxy slot zero and its runtime hash;
+- `ADMIN_SAFE_FACTORY_ADDRESS`, `ADMIN_SAFE_FACTORY_CODE_HASH`, and `ADMIN_SAFE_DEPLOYMENT_TX_HASH`: factory provenance pinned to the matching `ProxyCreation` event;
+- `ADMIN_SAFE_VERSION`: exact value returned by `VERSION()`;
+- `ADMIN_SAFE_OWNERS`: exact comma-separated checksummed owner set;
+- `ADMIN_SAFE_THRESHOLD`: exact threshold, bounded by the owner count;
+- `ADMIN_SAFE_MODULES`: exact comma-separated enabled-module set, or an empty value when none are permitted;
+- `ADMIN_SAFE_GUARD_STORAGE_SLOT`: must equal the canonical Safe guard slot `0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c7`; configurable alternative slots are rejected;
+- `ADMIN_SAFE_GUARD_ADDRESS`: exact guard address, or the zero address when no guard is permitted.
+
+The scripts read `getOwners()`, `getThreshold()` and `nonce()` and fail closed
+if code, interface, runtime hash, owners or threshold differ. A target-call
+sequence simulation is not represented as a full Safe execution simulation.
+Before signing, the final Safe transaction must separately be dry-run with its
+real Safe nonce, MultiSend wrapper, signatures, guard and module configuration.
+
+## Pons graduation transition
+
+The active-curve adapter has a deliberate two-stage lifecycle:
+
+1. While `readyToGraduate=false` and `graduated=false`, it sells through the
+   authenticated Pons curve and follows the configured downstream V3 route.
+2. As soon as `readyToGraduate=true`, active-curve swaps fail closed. Purchases
+   must be hidden in Railway and the Safe should call `pausePurchases()` and
+   `EconomyRouter.pause()` if graduation is not completed immediately.
+3. After the factory and curve both report graduation, discover the real
+   STOCKDEALER/pair-token V3 pool and fee. Do not assume the launch-time
+   `poolFee` is non-zero; FLYCO reports zero while its curve is active.
+4. Build seven full V3 paths beginning at STOCKDEALER and ending at each
+   canonical Stock Token. Quote and simulate the maximum configured seed/house
+   allocation at one pinned finalized block with a one-percent minimum output.
+   The adapter additionally resolves every hop through the router-authenticated
+   V3 factory and rejects missing contracts or pools with zero liquidity.
+5. Submit one Safe batch containing seven one-time
+   `activateGraduatedPath(tokenIn, tokenOut, path)` calls. Each path is immutable
+   after activation and cannot be repointed.
+6. Read back every `graduatedPathFor` and `graduatedPathActive`, rerun bounded
+   swaps, verify zero adapter balances/allowances, then reactivate the Router,
+   purchases and Railway in that order.
+
+Until step 5 is complete, a graduated token cannot spend through the adapter;
+the transaction reverts atomically, so currency is not burned or stranded.
 
 ## Railway services
 

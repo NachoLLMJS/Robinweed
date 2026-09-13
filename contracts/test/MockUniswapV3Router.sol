@@ -7,6 +7,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 contract MockUniswapV3Router {
     using SafeERC20 for IERC20;
     struct ExactInputParams { bytes path; address recipient; uint256 amountIn; uint256 amountOutMinimum; }
+    function factory() external pure returns (address) { return 0x1f7d7550B1b028f7571E69A784071F0205FD2EfA; }
     function exactInput(ExactInputParams calldata params) external payable returns (uint256 amountOut) {
         address tokenIn;
         address tokenOut;

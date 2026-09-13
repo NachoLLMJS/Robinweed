@@ -10,7 +10,7 @@ const base = {
   blockNumber: 123,
   blockHash: `0x${'a'.repeat(64)}`,
   properties: [{ houseId: 1, price: '1000', capacity: 4, configured: true, owner: address }],
-  crops: [{ houseId: 1, plotId: 0, ticker: 'MSFT', plantedAt: 1, wateredAt: 2, stage: 3 }],
+  crops: [{ location: 'house', houseId: 1, plotId: 0, ticker: 'MSFT', plantedAt: 1, wateredAt: 2, stage: 3 }],
   seeds: Object.fromEntries(symbols.map(symbol => [symbol, { remaining: '1', unassignedRawCredit: '15' }])),
 };
 
@@ -19,6 +19,12 @@ test('onchain snapshot validates bounded state and preserves uint256 seed totals
   assert.equal(result.totalSeeds, '7');
   const huge = { ...base, seeds: { ...base.seeds, MSFT: { remaining: '900719925474099300000', unassignedRawCredit: '1' } } };
   assert.equal(validateOnchainSnapshot(huge, address).totalSeeds, '900719925474099300006');
+});
+
+test('onchain snapshot accepts eight default warehouse plots without house ownership', () => {
+  const warehouse = { location: 'warehouse', plotId: 7, ticker: 'MSFT', plantedAt: 1, wateredAt: 2, stage: 5 };
+  assert.equal(validateOnchainSnapshot({ ...base, properties: [], crops: [warehouse] }, address).crops[0].location, 'warehouse');
+  assert.throws(() => validateOnchainSnapshot({ ...base, crops: [{ ...warehouse, plotId: 8 }] }, address), /INVALID_CROP_STATE/);
 });
 
 test('onchain snapshot accepts pristine unconfigured houses from a paused foundation', () => {

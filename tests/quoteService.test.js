@@ -19,6 +19,15 @@ test('seed quote reads onchain price/path and derives bounded minimum output fro
   assert.deepEqual(quote, { symbol: 'MSFT', ticker, chainId: 4663, gameCore: '0x5555555555555555555555555555555555555555', economyRouter: '0x6666666666666666666666666666666666666666', currency: '0x1111111111111111111111111111111111111111', quoteBlock: 123, quoteBlockHash, quoteBlockTimestamp: 699, deadline: 999, packs: 2, totalPrice: '200', rewardInput: '120', quotedStockOut: '240', minimumStockOut: '238' });
 });
 
+test('seed quote delegates Pons lifecycle execution to the adapter-aware route simulator', async () => {
+  let received;
+  const quoteRoute = async input => { received=input; return 321n; };
+  const quote=await quoteSeedPurchase({symbol:'MSFT',packs:1,slippageBps:100,gameCore,router,adapterFor:()=>adapter,quoter:{quoteExactInput:{staticCall:async()=>{throw new Error('raw V3 quoter must not run');}}},quoteContext,quoteRoute});
+  assert.equal(received.amountIn,60n);
+  assert.equal(received.receiver,'0x2222222222222222222222222222222222222222');
+  assert.equal(quote.quotedStockOut,'321');
+});
+
 test('seed quote rejects HOOD, unconfigured values, invalid counts and excessive slippage', async () => {
   for (const input of [
     { symbol: 'HOOD', packs: 1, slippageBps: 100 },

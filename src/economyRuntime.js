@@ -85,6 +85,19 @@ export async function loadEconomyConfig(fetchImpl = fetch) {
   return validateConfig(await response.json());
 }
 
+export async function loadEconomyConfigWithRetry({ fetchImpl = fetch, maxAttempts = 4, delayMs = 500, sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)) } = {}) {
+  if (!Number.isInteger(maxAttempts) || maxAttempts < 1 || !Number.isInteger(delayMs) || delayMs < 0) throw new Error('INVALID_CONFIG_RETRY');
+  let lastError;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try { return await loadEconomyConfig(fetchImpl); }
+    catch (error) {
+      lastError = error;
+      if (attempt < maxAttempts) await sleep(delayMs * attempt);
+    }
+  }
+  throw lastError;
+}
+
 export async function executeSeedPurchase({ symbol, account, config, ethereum, fetchImpl = fetch, storage = localStorage, locks = navigator.locks, approve = approveCurrencyIfNeeded, send = sendGameAction, waitCanonical = waitForSuccessfulReceipt, now = Date.now }) {
   validateConfig(config);
   if (!config.economyActive || !locks?.request || !storage) throw new Error('ECONOMY_NOT_READY');

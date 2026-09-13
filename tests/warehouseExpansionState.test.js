@@ -12,7 +12,7 @@ import {
 const overlaps = (a, b) => a.minX < b.maxX && a.maxX > b.minX && a.minZ < b.maxZ && a.maxZ > b.minZ;
 const mainSource = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 
-test('tutorial warehouse starts with every grow pot empty and no claimable mature plant', () => {
+test('default wallet warehouse starts with every grow plot empty and no claimable mature plant', () => {
   assert.doesNotMatch(mainSource, /growth:index===0\?10:0/);
   assert.doesNotMatch(mainSource, /seedTicker:index===0\?'HOOD':null/);
   assert.match(mainSource, /growth:0,water:0,seedTicker:null/);

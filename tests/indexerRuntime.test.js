@@ -8,7 +8,10 @@ test('private indexer uses advisory lock, corroborated finalized head, bytecode 
   assert.match(source, /pg_try_advisory_lock/);
   assert.match(source, /corroboratedFinalizedHead/);
   assert.match(source, /expectedCodeHash/);
-  assert.match(source, /Math\.min\(fromBlock \+ 499, finalized\.number\)/);
+  assert.match(source, /Math\.min\(fromBlock \+ 49, finalized\.number\)/);
+  assert.match(source, /pageStart \+= 10/);
+  assert.match(source, /retryRpc/);
+  assert.match(source, /batchMaxCount: 1/);
   assert.match(source, /INSERT INTO applied_events/);
   assert.match(source, /applyProjectionOperations/);
 });

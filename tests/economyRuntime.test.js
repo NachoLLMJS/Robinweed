@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { encodeBytes32String, keccak256 } from 'ethers';
-import { executeCultivationAction, executeHousePurchase, executeSeedPurchase, loadEconomyConfig, reconcileEconomyJournal } from '../src/economyRuntime.js';
+import { executeCultivationAction, executeHousePurchase, executeSeedPurchase, loadEconomyConfig, loadEconomyConfigWithRetry, reconcileEconomyJournal } from '../src/economyRuntime.js';
 
 const symbols = ['AAPL', 'GOOGL', 'MSFT', 'MSTR', 'NVDA', 'QQQ', 'TSLA'];
 const account = '0x1111111111111111111111111111111111111111';
@@ -27,6 +27,18 @@ const houseQuote = overrides => ({ ...quoteIdentity, houseId: 2, capacity: 4, to
 test('economy config loader accepts only the exact ordered seven-stock basket', async () => {
   assert.deepEqual(await loadEconomyConfig(async () => ({ ok: true, json: async () => config })), config);
   await assert.rejects(loadEconomyConfig(async () => ({ ok: true, json: async () => ({ ...config, houseBasketSymbols: [...symbols].reverse() }) })), /INCOMPLETE_HOUSE_BASKET/);
+});
+
+test('economy config retry recovers when the first production request fails', async () => {
+  let attempts = 0;
+  const loaded = await loadEconomyConfigWithRetry({
+    fetchImpl: async () => ++attempts === 1 ? { ok: false } : { ok: true, json: async () => config },
+    maxAttempts: 3,
+    delayMs: 1,
+    sleep: async () => {},
+  });
+  assert.equal(attempts, 2);
+  assert.deepEqual(loaded, config);
 });
 
 test('seed purchase pins the quote block and exact 300-second deadline before approval and send', async () => {

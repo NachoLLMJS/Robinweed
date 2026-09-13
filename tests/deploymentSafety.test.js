@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const deploy = readFileSync(new URL('../scripts/deploy-robinhood-mainnet.js', import.meta.url), 'utf8');
+const deployV2 = readFileSync(new URL('../scripts/deploy-robinhood-mainnet-v2.js', import.meta.url), 'utf8');
+const rehearsalSimulation = readFileSync(new URL('../scripts/simulate-flyco-adapter-mainnet.js', import.meta.url), 'utf8');
 const example = readFileSync(new URL('../.env.example', import.meta.url), 'utf8');
 
 test('deployment script is mainnet-only, external-env-only, and journals before every send', () => {
@@ -54,4 +56,53 @@ test('deployment requires the complete foundation gas budget before creating a j
 
 test('deployment accepts an exact private key with or without the optional 0x prefix', () => {
   assert.match(deploy, /\^\(\?:0x\)\?\[0-9a-fA-F\]\{64\}\$/);
+});
+
+test('v2 deployment uses a distinct journal and the Pons lifecycle adapter', () => {
+  assert.match(deployV2, /robinhood-mainnet-foundation-v2\.json/);
+  assert.match(deployV2, /safe-accept-ownership-v2-batch\.json/);
+  assert.match(deployV2, /artifact\('StockdealerPonsAdapter','StockdealerPonsAdapter'\)/);
+  assert.match(deployV2, /deployContract\(context,'PonsAdapter'/);
+  assert.match(deployV2, /FOUNDATION_V2_DEPLOYED_PAUSED_TOKEN_UNCONFIGURED/);
+  assert.doesNotMatch(deployV2, /journal\.status='FOUNDATION_DEPLOYED_PAUSED_TOKEN_UNCONFIGURED'/);
+  assert.match(deployV2, /getOwners/);
+  assert.match(deployV2, /getThreshold/);
+  assert.match(deployV2, /ADMIN_SAFE_OWNERS/);
+  assert.match(deployV2, /ADMIN_SAFE_THRESHOLD/);
+  assert.match(deployV2, /ADMIN_SAFE_CODE_HASH/);
+  assert.match(deployV2, /ADMIN_SAFE_SINGLETON_ADDRESS/);
+  assert.match(deployV2, /ADMIN_SAFE_SINGLETON_CODE_HASH/);
+  assert.match(deployV2, /ADMIN_SAFE_FACTORY_ADDRESS/);
+  assert.match(deployV2, /ADMIN_SAFE_FACTORY_CODE_HASH/);
+  assert.match(deployV2, /ADMIN_SAFE_DEPLOYMENT_TX_HASH/);
+  assert.match(deployV2, /ProxyCreation/);
+  assert.match(deployV2, /getModulesPaginated/);
+  assert.match(deployV2, /ADMIN_SAFE_MODULES/);
+  assert.match(deployV2, /ADMIN_SAFE_GUARD_STORAGE_SLOT/);
+  assert.match(deployV2, /SAFE_GUARD_STORAGE_SLOT\s*=\s*'0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c7'/);
+  assert.match(deployV2, /ADMIN_SAFE_GUARD_STORAGE_SLOT_MISMATCH/);
+  assert.match(deployV2, /ADMIN_SAFE_GUARD_ADDRESS/);
+  assert.match(deployV2, /safeAttestation/);
+  assert.match(deployV2, /EXPECTED_DEPLOYER_ADDRESS_REQUIRED/);
+  assert.match(deployV2, /DEPLOYER_MUST_BE_EOA/);
+  assert.match(deployV2, /ownershipBatchDigest/);
+  assert.match(deployV2, /ownershipTransactions/);
+});
+
+test('Windows contract test command enumerates files instead of passing a literal glob', () => {
+  const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  assert.doesNotMatch(packageJson.scripts['contracts:test'], /\*/);
+  for (const file of ['cultivation', 'economyRouter', 'gameCore', 'rewardVault', 'uniswapAdapter']) {
+    assert.match(packageJson.scripts['contracts:test'], new RegExp(`test/contracts/${file}\\.test\\.js`));
+  }
+  assert.match(packageJson.scripts['contracts:test'], /test\/StockdealerPonsAdapter\.test\.js/);
+});
+
+test('FLYCO simulation compiles fresh and reruns swaps with bounded output and residue checks', () => {
+  assert.match(rehearsalSimulation, /compile['"],\s*['"]--force/);
+  assert.match(rehearsalSimulation, /minimumOutBySymbol/);
+  assert.doesNotMatch(rehearsalSimulation, /amount,1n,deadline/);
+  assert.match(rehearsalSimulation, /allowance/);
+  assert.match(rehearsalSimulation, /ADAPTER_RESIDUE_DETECTED/);
+  assert.match(rehearsalSimulation, /SIMULATION_ZERO_OUTPUT/);
 });

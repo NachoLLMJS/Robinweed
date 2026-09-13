@@ -29,11 +29,11 @@ test('backend loads the versioned mainnet manifest from a repository path instea
     ...valid,
     CONTRACT_MANIFEST_JSON: '',
     CONTRACT_MANIFEST_PATH: 'config/mainnet-contract-manifest.json',
-    INDEXER_START_BLOCK: '57826741',
+    INDEXER_START_BLOCK: '62100770',
   });
   assert.equal(config.contractManifest.contracts.length, 10);
-  assert.equal(config.contractManifest.economyActive, false);
-  assert.equal(config.contractManifest.currency, null);
+  assert.equal(config.contractManifest.economyActive, true);
+  assert.equal(config.contractManifest.currency, '0x8998706EbF337575f05F294036eBfc3D1dE01290');
 });
 
 test('backend config fails closed for wrong chain, insecure origin, weak secret, or deployer keys', () => {

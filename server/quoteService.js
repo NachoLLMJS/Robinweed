@@ -19,7 +19,7 @@ function abortable(signal, work) {
   });
 }
 
-async function quoteSeedPurchaseWork({ symbol, packs, slippageBps, gameCore, router, adapterFor, quoter, quoteContext }) {
+async function quoteSeedPurchaseWork({ symbol, packs, slippageBps, gameCore, router, adapterFor, quoter, quoteContext, quoteRoute }) {
   if (!SUPPORTED_STOCKS.has(symbol) || !Number.isInteger(packs) || packs < 1 || packs > 100 || !Number.isInteger(slippageBps) || slippageBps < 0 || slippageBps > 500) {
     throw new Error('INVALID_QUOTE_REQUEST');
   }
@@ -35,7 +35,9 @@ async function quoteSeedPurchaseWork({ symbol, packs, slippageBps, gameCore, rou
   if (!/^0x[0-9a-fA-F]{6,}$/.test(path) || path.length % 2 !== 0) throw new Error('PATH_NOT_READY');
   const totalPrice = packPrice * BigInt(packs);
   const rewardInput = totalPrice * REWARD_BPS / BPS;
-  const quoted = await quoter.quoteExactInput.staticCall(path, rewardInput, block);
+  const quoted = quoteRoute
+    ? await quoteRoute({ currency, target:stockToken, adapterAddress, amountIn:rewardInput, receiver:routeVault, deadline:context.deadline, blockTag:context.quoteBlock, path })
+    : await quoter.quoteExactInput.staticCall(path, rewardInput, block);
   const quotedStockOut = Array.isArray(quoted) ? quoted[0] : quoted;
   if (quotedStockOut <= 0n) throw new Error('ZERO_QUOTE');
   const minimumStockOut = (quotedStockOut * (BPS - BigInt(slippageBps)) + BPS - 1n) / BPS;
@@ -63,7 +65,7 @@ export function quoteSeedPurchase(input) {
   return abortable(input?.signal, quoteSeedPurchaseWork(input));
 }
 
-async function quoteHousePurchaseWork({ houseId, slippageBps, gameCore, router, adapterFor, quoter, quoteContext }) {
+async function quoteHousePurchaseWork({ houseId, slippageBps, gameCore, router, adapterFor, quoter, quoteContext, quoteRoute }) {
   if (!Number.isInteger(houseId) || houseId < 1 || houseId > 0xffffffff || !Number.isInteger(slippageBps) || slippageBps < 0 || slippageBps > 500) throw new Error('INVALID_HOUSE_QUOTE_REQUEST');
   const context = validatedQuoteContext(await quoteContext());
   const block = { blockTag: context.quoteBlock };
@@ -79,14 +81,16 @@ async function quoteHousePurchaseWork({ houseId, slippageBps, gameCore, router, 
   const quotedStockOuts = [];
   const minimumOuts = [];
   for (let index = 0; index < tickers.length; index += 1) {
-    const [stockToken,, adapterAddress, enabled] = await router.routes(tickers[index], block);
+    const [stockToken,routeVault, adapterAddress, enabled] = await router.routes(tickers[index], block);
     if (!enabled) throw new Error('ROUTE_NOT_READY');
     const routeInput = index + 1 === tickers.length ? rewardInput - allocated : rewardInput * weights[index] / BPS;
     allocated += routeInput;
     if (routeInput <= 0n) throw new Error('ZERO_ROUTE_INPUT');
     const path = await adapterFor(adapterAddress).pathFor(currency, stockToken, block);
     if (!/^0x[0-9a-fA-F]{6,}$/.test(path) || path.length % 2 !== 0) throw new Error('PATH_NOT_READY');
-    const result = await quoter.quoteExactInput.staticCall(path, routeInput, block);
+    const result = quoteRoute
+      ? await quoteRoute({ currency, target:stockToken, adapterAddress, amountIn:routeInput, receiver:routeVault, deadline:context.deadline, blockTag:context.quoteBlock, path })
+      : await quoter.quoteExactInput.staticCall(path, routeInput, block);
     const output = Array.isArray(result) ? result[0] : result;
     const minimum = (output * (BPS - BigInt(slippageBps)) + BPS - 1n) / BPS;
     if (output <= 0n || minimum <= 0n) throw new Error('ZERO_QUOTE');

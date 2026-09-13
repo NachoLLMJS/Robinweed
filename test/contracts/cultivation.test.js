@@ -34,6 +34,22 @@ async function readyFarm() {
 }
 
 describe('StockdealerGameCore cultivation', () => {
+  it('gives every wallet an eight-plot onchain default warehouse without buying a house', async () => {
+    const { player, outsider, vault, core, ticker } = await readyFarm();
+    await (await core.connect(player).plantWarehouse(0, ticker)).wait();
+    assert.equal(await vault.remainingSeeds(player.address), 3n);
+    assert.equal((await core.warehousePlants(player.address, 0)).ticker, ticker);
+    assert.equal(await core.warehousePlantStage(player.address, 0), 1n);
+    await assert.rejects(core.connect(outsider).waterWarehouse(0));
+    await (await core.connect(player).waterWarehouse(0)).wait();
+    const plant = await core.warehousePlants(player.address, 0);
+    await connection.provider.request({ method: 'evm_setNextBlockTimestamp', params: [Number(plant.wateredAt) + 8 * 3600] });
+    await connection.provider.request({ method: 'evm_mine', params: [] });
+    await (await core.connect(player).claimWarehouseHarvest(0, player.address)).wait();
+    assert.equal((await core.warehousePlants(player.address, 0)).ticker, ethers.ZeroHash);
+    await assert.rejects(core.connect(player).plantWarehouse(8, ticker));
+  });
+
   it('consumes one funded seed, waters once, and derives four two-hour growth transitions', async () => {
     const { player, outsider, vault, core, ticker } = await readyFarm();
     await assert.rejects(core.connect(outsider).plant(1, 0, ticker));

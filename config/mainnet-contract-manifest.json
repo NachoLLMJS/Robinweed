@@ -1,15 +1,23 @@
 {
   "chainId": 4663,
-  "economyActive": false,
-  "currency": null,
-  "houseBasketSymbols": [],
+  "economyActive": true,
+  "currency": "0x8998706EbF337575f05F294036eBfc3D1dE01290",
+  "houseBasketSymbols": [
+    "AAPL",
+    "GOOGL",
+    "MSFT",
+    "MSTR",
+    "NVDA",
+    "QQQ",
+    "TSLA"
+  ],
   "contracts": [
     {
       "name": "EconomyRouter",
-      "address": "0x8fa742B55c01B9dbE563dC77eB53a3ba614a0914",
-      "deploymentBlock": 57826741,
+      "address": "0x940507b21f3692a0164E1f0200846Ea176F659fC",
+      "deploymentBlock": 62237999,
       "expectedCodeHash": "0xc0ffe2eba3eb7c808fba7167980e93e5da26ccd8e9bb61b74d8ef981c029cca1",
-      "abiVersion": "1",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -679,10 +687,10 @@
     },
     {
       "name": "UniswapV3Adapter",
-      "address": "0xC85b30dE719E77bac3D5D717bb805B69957D5D69",
-      "deploymentBlock": 57828029,
-      "expectedCodeHash": "0x1f4b8a14f9f258bc8ccb0cb196e26ac9fc92c828eeb56091c3d1285ff0429c14",
-      "abiVersion": "1",
+      "address": "0xB4f283161FE53467212244A6B3FDB721Bc421Bf6",
+      "deploymentBlock": 62238102,
+      "expectedCodeHash": "0x49d1426d50c7e71616ba6fa6d54d78391662bd7fc92bdb0c9ab3c8cdba516998",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -712,6 +720,21 @@
         },
         {
           "inputs": [],
+          "name": "CurveGraduated",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "CurveNotGraduated",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "CurveTransitioning",
+          "type": "error"
+        },
+        {
+          "inputs": [],
           "name": "DeadlineExpired",
           "type": "error"
         },
@@ -723,6 +746,11 @@
         {
           "inputs": [],
           "name": "InvalidPath",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "MinimumOutputNotMet",
           "type": "error"
         },
         {
@@ -785,6 +813,25 @@
             {
               "indexed": true,
               "internalType": "address",
+              "name": "tokenIn",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "tokenOut",
+              "type": "address"
+            }
+          ],
+          "name": "GraduatedPathActivated",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
               "name": "previousOwner",
               "type": "address"
             },
@@ -835,7 +882,7 @@
             {
               "indexed": false,
               "internalType": "bytes",
-              "name": "path",
+              "name": "routeData",
               "type": "bytes"
             }
           ],
@@ -845,6 +892,19 @@
         {
           "inputs": [],
           "name": "OFFICIAL_SWAP_ROUTER_02",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "OFFICIAL_V3_FACTORY",
           "outputs": [
             {
               "internalType": "address",
@@ -876,6 +936,29 @@
           "type": "function"
         },
         {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "tokenIn",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenOut",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes",
+              "name": "graduatedPath",
+              "type": "bytes"
+            }
+          ],
+          "name": "activateGraduatedPath",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
           "inputs": [],
           "name": "configurationFrozen",
           "outputs": [
@@ -902,7 +985,7 @@
             },
             {
               "internalType": "bytes",
-              "name": "path",
+              "name": "routeData",
               "type": "bytes"
             }
           ],
@@ -929,6 +1012,49 @@
           "name": "freezeConfiguration",
           "outputs": [],
           "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "bytes32",
+              "name": "pair",
+              "type": "bytes32"
+            }
+          ],
+          "name": "graduatedPathActive",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "active",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "tokenIn",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "tokenOut",
+              "type": "address"
+            }
+          ],
+          "name": "graduatedPathFor",
+          "outputs": [
+            {
+              "internalType": "bytes",
+              "name": "",
+              "type": "bytes"
+            }
+          ],
+          "stateMutability": "view",
           "type": "function"
         },
         {
@@ -1049,10 +1175,10 @@
     },
     {
       "name": "Vault_AAPL",
-      "address": "0xbEAB147F795358AAb555861a5f3861861B778074",
-      "deploymentBlock": 57828129,
+      "address": "0x3CfAAED1ee054ce3726afEeCA7C251a3F1a4f34D",
+      "deploymentBlock": 62238203,
       "expectedCodeHash": "0x53fe465089ed8e3d2e541a57dfb8a48833d76adf15808c155ed197d7a51e714e",
-      "abiVersion": "1",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -1660,10 +1786,10 @@
     },
     {
       "name": "Vault_GOOGL",
-      "address": "0x2c98fBaD23B85b70B5bAd25b93C0540931554526",
-      "deploymentBlock": 57828229,
+      "address": "0x807a34DA8AEe9C76B396BEf752691467834A3c64",
+      "deploymentBlock": 62238305,
       "expectedCodeHash": "0xc4fc2944e485d5effd2df2e4e88c3cf95de7f2fd46925bde2670725b7deec88e",
-      "abiVersion": "1",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -2271,10 +2397,10 @@
     },
     {
       "name": "Vault_MSFT",
-      "address": "0xeD6e81F023b43C916Fd2b4647bE25521F31fE547",
-      "deploymentBlock": 57828330,
+      "address": "0x574d06b2E54738Ca46970050B515eD432f97c854",
+      "deploymentBlock": 62238407,
       "expectedCodeHash": "0x47de16d25fe4eee8c6d88afe48e743294b9744385735d07fe3a51893bc54a102",
-      "abiVersion": "1",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -2882,10 +3008,10 @@
     },
     {
       "name": "Vault_MSTR",
-      "address": "0x4e8029f6E984dc5d8aDD10398B4eF625A3D15359",
-      "deploymentBlock": 57828430,
+      "address": "0xf308711E83622718DEB1ba9D6539F074b1FFA018",
+      "deploymentBlock": 62238509,
       "expectedCodeHash": "0x7a55e5d649aee154040632fe6bc5b80d0551c19b11d7c37edac9741756961fe3",
-      "abiVersion": "1",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -3493,10 +3619,10 @@
     },
     {
       "name": "Vault_NVDA",
-      "address": "0xB246a176a00867bA0c565FbD4C1c093843f6fc8f",
-      "deploymentBlock": 57828530,
+      "address": "0xbCD9C2a07936a5929dceC5486076B7eCeEcA1B5a",
+      "deploymentBlock": 62238611,
       "expectedCodeHash": "0x60b41dee6c6b58af5fdfb81e8501ace1ae287e3ce884237f7b4a227e1aee5fc4",
-      "abiVersion": "1",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -4104,10 +4230,10 @@
     },
     {
       "name": "Vault_QQQ",
-      "address": "0x1fCA62BF4504CA1d4DF7C36C3239495706891382",
-      "deploymentBlock": 57828631,
+      "address": "0xeE0Fa83A41A1405484c12AAD12c25f987e3096e3",
+      "deploymentBlock": 62238714,
       "expectedCodeHash": "0x6d257e5a0c3fcb989949316018a88e52c813a32f3da92bd8514821f9c387c424",
-      "abiVersion": "1",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -4715,10 +4841,10 @@
     },
     {
       "name": "Vault_TSLA",
-      "address": "0x55F489a9a65d0646857Ed0CCe72c1d1f11eFC167",
-      "deploymentBlock": 57828727,
+      "address": "0x57F3305A31A9745b806F9Ef17B0AfDC6945C431E",
+      "deploymentBlock": 62238816,
       "expectedCodeHash": "0x8784b933b96c38209f30ac90570c9fcc5e45875a2a28259c1aafcfcdb2b004a7",
-      "abiVersion": "1",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -5326,10 +5452,10 @@
     },
     {
       "name": "GameCore",
-      "address": "0x5C8955BebDD92F3741dF6816e2B4Cdc0f0b1EdA1",
-      "deploymentBlock": 57828827,
-      "expectedCodeHash": "0x2f43f7dd648fdee1edd203c2d7e2812219e8ce2ff9a60ada217411abe82e5a98",
-      "abiVersion": "1",
+      "address": "0x4E7db3F33E495D4932bD5460B25Ca36dB0D403C5",
+      "deploymentBlock": 62238918,
+      "expectedCodeHash": "0x80741c2e9f5ffa1d246a816f282d64d2ff5ad9bd4472bc920f4418c35c26558f",
+      "abiVersion": "3-default-warehouse-pons-trial",
       "abi": [
         {
           "inputs": [
@@ -5793,6 +5919,106 @@
           "type": "event"
         },
         {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint8",
+              "name": "plotId",
+              "type": "uint8"
+            },
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "ticker",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "rawAssets",
+              "type": "uint256"
+            }
+          ],
+          "name": "WarehouseHarvestClaimed",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint8",
+              "name": "plotId",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint64",
+              "name": "wateredAt",
+              "type": "uint64"
+            }
+          ],
+          "name": "WarehousePlantWatered",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint8",
+              "name": "plotId",
+              "type": "uint8"
+            },
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "ticker",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "rewardPosition",
+              "type": "bytes32"
+            }
+          ],
+          "name": "WarehouseSeedPlanted",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "DEFAULT_WAREHOUSE_CAPACITY",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
           "inputs": [],
           "name": "GROWTH_INTERVAL",
           "outputs": [
@@ -5956,6 +6182,30 @@
             }
           ],
           "name": "claimHarvest",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "rawAssets",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint8",
+              "name": "plotId",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            }
+          ],
+          "name": "claimWarehouseHarvest",
           "outputs": [
             {
               "internalType": "uint256",
@@ -6264,6 +6514,30 @@
         {
           "inputs": [
             {
+              "internalType": "uint8",
+              "name": "plotId",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "ticker",
+              "type": "bytes32"
+            }
+          ],
+          "name": "plantWarehouse",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "positionId",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "uint32",
               "name": "houseId",
               "type": "uint32"
@@ -6375,6 +6649,74 @@
         {
           "inputs": [
             {
+              "internalType": "address",
+              "name": "player",
+              "type": "address"
+            },
+            {
+              "internalType": "uint8",
+              "name": "plotId",
+              "type": "uint8"
+            }
+          ],
+          "name": "warehousePlantStage",
+          "outputs": [
+            {
+              "internalType": "uint8",
+              "name": "",
+              "type": "uint8"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "player",
+              "type": "address"
+            },
+            {
+              "internalType": "uint8",
+              "name": "plotId",
+              "type": "uint8"
+            }
+          ],
+          "name": "warehousePlants",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "ticker",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "plantedAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "wateredAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "rewardPosition",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "fundingVault",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
               "internalType": "uint32",
               "name": "houseId",
               "type": "uint32"
@@ -6386,6 +6728,19 @@
             }
           ],
           "name": "water",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint8",
+              "name": "plotId",
+              "type": "uint8"
+            }
+          ],
+          "name": "waterWarehouse",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"

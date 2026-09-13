@@ -17,8 +17,21 @@ test('vault and crop events map only to their bounded projection operations', ()
   assert.deepEqual(projectionOperations({ contractName: 'Unknown', eventName: 'Transfer', args: {}, meta }), []);
 });
 
+test('warehouse cultivation events project by wallet and plot without a house', () => {
+  const owner = '0x2222222222222222222222222222222222222222';
+  const ticker = `0x${'4d534654'.padEnd(64, '0')}`;
+  const rewardPosition = `0x${'3'.repeat(64)}`;
+  const planted = projectionOperations({ contractName: 'GameCore', eventName: 'WarehouseSeedPlanted', args: { owner, plotId: 7n, ticker, rewardPosition }, meta });
+  const watered = projectionOperations({ contractName: 'GameCore', eventName: 'WarehousePlantWatered', args: { owner, plotId: 7n, wateredAt: 100n }, meta });
+  const claimed = projectionOperations({ contractName: 'GameCore', eventName: 'WarehouseHarvestClaimed', args: { owner, plotId: 7n, ticker, rawAssets: 60n }, meta });
+  assert.deepEqual([planted[0]?.kind, watered[0]?.kind, claimed[0]?.kind], ['warehouse-crop-plant', 'warehouse-crop-water', 'warehouse-crop-claim']);
+  assert.equal(planted[0].values.plotId, 7);
+  assert.deepEqual(planted[0].values.owner, Buffer.from(owner.slice(2), 'hex'));
+});
+
 test('state-transition reducers fail when prerequisites affect zero rows', async () => {
   const client = { query: async () => ({ rowCount: 0 }) };
   await assert.rejects(applyProjectionOperations(client, [{ kind: 'seed-consume', values: { rawAssets: '15', blockNumber: 2, wallet: Buffer.alloc(20), ticker: 'MSFT' } }]));
   await assert.rejects(applyProjectionOperations(client, [{ kind: 'crop-water', values: { wateredAt: new Date(), blockNumber: 2, houseId: 1, plotId: 0 } }]));
+  await assert.rejects(applyProjectionOperations(client, [{ kind: 'warehouse-crop-water', values: { wateredAt: new Date(), blockNumber: 2, owner: Buffer.alloc(20), plotId: 0 } }]));
 });

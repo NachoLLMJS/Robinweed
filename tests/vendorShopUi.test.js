@@ -15,11 +15,18 @@ test('Vlad shop provides one GLB preview and eight selectable seed products', ()
   assert.match(main, /selectSlot\(product\.slot\)/);
 });
 
-test('unlaunched token purchases and tokenized-stock claims fail closed', () => {
+test('unsupported HOOD purchases fail closed while live stock purchases and mature claims are wired', () => {
   assert.match(html, /id="buySelectedSeeds"[^>]*disabled/);
   assert.match(html, /BUY 4 SEEDS · 100 \$STOCKDEALER/);
   assert.match(html, /60% STOCK SWAP · 40% BURN/);
   assert.match(html, /id="claimHarvest"[^>]*disabled/);
+  assert.match(main, /claimHarvestButton\.addEventListener\('click',claimAvailableHarvest\)/);
+  assert.match(main, /function claimableOnchainCrop/);
+  assert.match(main, /NO MATURE STOCKS TO CLAIM/);
+  assert.match(main, /plantWarehouse/);
+  assert.match(main, /waterWarehouse/);
+  assert.match(main, /claimWarehouseHarvest/);
+  assert.doesNotMatch(main, /WAREHOUSE TUTORIAL/);
   assert.doesNotMatch(html, /id="sellBuds"/);
   assert.doesNotMatch(main, /state\.cash\+=earned/);
 });

@@ -6,13 +6,16 @@ const GAME_CORE_ABI = [
   'function plant(uint32 houseId,uint8 plotId,bytes32 ticker) returns (bytes32)',
   'function water(uint32 houseId,uint8 plotId)',
   'function claimHarvest(uint32 houseId,uint8 plotId,address recipient) returns (uint256)',
+  'function plantWarehouse(uint8 plotId,bytes32 ticker) returns (bytes32)',
+  'function waterWarehouse(uint8 plotId)',
+  'function claimWarehouseHarvest(uint8 plotId,address recipient) returns (uint256)',
 ];
 const gameCoreInterface = new Interface(GAME_CORE_ABI);
 const erc20Interface = new Interface([
   'function allowance(address owner,address spender) view returns (uint256)',
   'function approve(address spender,uint256 amount) returns (bool)',
 ]);
-const ALLOWED_ACTIONS = new Set(['buySeedPacks', 'buyHouse', 'plant', 'water', 'claimHarvest']);
+const ALLOWED_ACTIONS = new Set(['buySeedPacks', 'buyHouse', 'plant', 'water', 'claimHarvest', 'plantWarehouse', 'waterWarehouse', 'claimWarehouseHarvest']);
 const TRANSACTION_HASH = /^0x[0-9a-fA-F]{64}$/;
 
 function rpcQuantity(value, errorCode) {

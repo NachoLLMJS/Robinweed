@@ -8,9 +8,11 @@ import { applyProjectionOperations, projectionOperations } from './eventReducer.
 const { Pool } = pg;
 const config = loadBackendConfig();
 const pool = new Pool({ connectionString: config.databaseUrl, max: 3, ssl: config.databaseSsl });
-const primary = new JsonRpcProvider(config.rpcPrimary, 4663, { staticNetwork: true });
-const secondary = new JsonRpcProvider(config.rpcSecondary, 4663, { staticNetwork: true });
+const primary = new JsonRpcProvider(config.rpcPrimary, 4663, { staticNetwork: true, batchMaxCount: 1 });
+const secondary = new JsonRpcProvider(config.rpcSecondary, 4663, { staticNetwork: true, batchMaxCount: 1 });
 let stopping = false;
+let ingestedRanges = 0;
+let lastCaughtUpBlock = -1;
 
 const contracts = config.contractManifest.contracts.map(entry => {
   const address = getAddress(entry.address);
@@ -23,10 +25,28 @@ if (byAddress.size !== contracts.length) throw new Error('DUPLICATE_CONTRACT_ADD
 const allowlist = new Set(byAddress.keys());
 const bytes = hex => Buffer.from(hex.slice(2), 'hex');
 const sameHex = (left, right) => left?.toLowerCase() === right?.toLowerCase();
+const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
+
+function transientRpcError(error) {
+  const status = Number(error?.info?.responseStatus?.match?.(/^\d+/)?.[0]);
+  return error?.code === -32005 || error?.error?.code === -32005 || error?.code === 'TIMEOUT' || error?.code === 'SERVER_ERROR' && (status === 429 || status >= 500);
+}
+
+async function retryRpc(task) {
+  let lastError;
+  for (let attempt = 1; attempt <= 5; attempt += 1) {
+    try { return await task(); } catch (error) {
+      lastError = error;
+      if (!transientRpcError(error) || attempt === 5) throw error;
+      await sleep(attempt * 1_000);
+    }
+  }
+  throw lastError;
+}
 
 async function verifyManifest(blockNumber) {
   for (const entry of contracts) {
-    const [primaryCode, secondaryCode] = await Promise.all([primary.getCode(entry.address, blockNumber), secondary.getCode(entry.address, blockNumber)]);
+    const [primaryCode, secondaryCode] = await Promise.all([retryRpc(() => primary.getCode(entry.address, blockNumber)), retryRpc(() => secondary.getCode(entry.address, blockNumber))]);
     if (primaryCode === '0x' || !sameHex(primaryCode, secondaryCode) || !sameHex(keccak256(primaryCode), entry.expectedCodeHash)) throw new Error(`CONTRACT_CODE_MISMATCH:${entry.name}`);
   }
 }
@@ -38,19 +58,25 @@ function logKey(log) {
 async function corroboratedBlocks(fromBlock, toBlock, expectedParentHash) {
   const blocks = [];
   let parentHash = expectedParentHash;
-  for (let number = fromBlock; number <= toBlock; number += 1) {
-    const [left, right] = await Promise.all([primary.getBlock(number), secondary.getBlock(number)]);
-    if (!left || !right || left.number !== number || right.number !== number || !sameHex(left.hash, right.hash) || !sameHex(left.parentHash, right.parentHash) || left.timestamp !== right.timestamp) throw new Error(`BLOCK_PROVIDER_DISAGREEMENT:${number}`);
-    if (parentHash && !sameHex(left.parentHash, parentHash)) throw new Error(`BLOCK_PARENT_DISCONTINUITY:${number}`);
-    parentHash = left.hash;
-    blocks.push(left);
+  for (let pageStart = fromBlock; pageStart <= toBlock; pageStart += 10) {
+    const numbers = Array.from({ length: Math.min(10, toBlock - pageStart + 1) }, (_, index) => pageStart + index);
+    const page = await Promise.all(numbers.map(async number => {
+      const [left, right] = await Promise.all([retryRpc(() => primary.getBlock(number)), retryRpc(() => secondary.getBlock(number))]);
+      return { number, left, right };
+    }));
+    for (const { number, left, right } of page) {
+      if (!left || !right || left.number !== number || right.number !== number || !sameHex(left.hash, right.hash) || !sameHex(left.parentHash, right.parentHash) || left.timestamp !== right.timestamp) throw new Error(`BLOCK_PROVIDER_DISAGREEMENT:${number}`);
+      if (parentHash && !sameHex(left.parentHash, parentHash)) throw new Error(`BLOCK_PARENT_DISCONTINUITY:${number}`);
+      parentHash = left.hash;
+      blocks.push(left);
+    }
   }
   return blocks;
 }
 
 async function corroboratedLogs(fromBlock, toBlock) {
   const filter = { address: contracts.map(entry => entry.address), fromBlock, toBlock };
-  const [left, right] = await Promise.all([primary.getLogs(filter), secondary.getLogs(filter)]);
+  const [left, right] = await Promise.all([retryRpc(() => primary.getLogs(filter)), retryRpc(() => secondary.getLogs(filter))]);
   left.sort((a, b) => a.blockNumber - b.blockNumber || a.transactionIndex - b.transactionIndex || a.index - b.index);
   right.sort((a, b) => a.blockNumber - b.blockNumber || a.transactionIndex - b.transactionIndex || a.index - b.index);
   if (left.length !== right.length || left.some((log, index) => logKey(log) !== logKey(right[index]))) throw new Error(`LOG_PROVIDER_DISAGREEMENT:${fromBlock}-${toBlock}`);
@@ -108,15 +134,24 @@ async function validatedCheckpoint(client, finalized) {
   const number = Number(result.rows[0].finalized_block);
   const storedHash = `0x${result.rows[0].finalized_hash.toString('hex')}`;
   if (!Number.isSafeInteger(number) || number > finalized.number) throw new Error('CHECKPOINT_AHEAD_OF_FINALITY');
-  const [left, right] = await Promise.all([primary.getBlock(number), secondary.getBlock(number)]);
+  const [left, right] = await Promise.all([retryRpc(() => primary.getBlock(number)), retryRpc(() => secondary.getBlock(number))]);
   if (!left || !right || !sameHex(left.hash, storedHash) || !sameHex(right.hash, storedHash)) throw new Error('CHECKPOINT_HASH_MISMATCH');
   return { number, hash: storedHash };
 }
 
 async function run() {
   const lockClient = await pool.connect();
-  const lock = await lockClient.query('SELECT pg_try_advisory_lock(4663002) AS acquired');
-  if (!lock.rows[0]?.acquired) throw new Error('INDEXER_LOCK_UNAVAILABLE');
+  let acquired = false;
+  while (!stopping && !acquired) {
+    const lock = await lockClient.query('SELECT pg_try_advisory_lock(4663002) AS acquired');
+    acquired = Boolean(lock.rows[0]?.acquired);
+    if (!acquired) await sleep(5_000);
+  }
+  if (!acquired) {
+    lockClient.release();
+    await pool.end();
+    return;
+  }
   try {
     while (!stopping) {
       const finalized = await corroboratedFinalizedHead(primary, secondary);
@@ -129,16 +164,22 @@ async function run() {
         parentHash = parents[0].hash;
       }
       while (fromBlock <= finalized.number) {
-        const toBlock = Math.min(fromBlock + 499, finalized.number);
+        const toBlock = Math.min(fromBlock + 49, finalized.number);
         await lockClient.query('BEGIN');
         try {
           parentHash = await ingestRange(lockClient, fromBlock, toBlock, parentHash);
           await lockClient.query('COMMIT');
+          ingestedRanges += 1;
+          if (ingestedRanges % 20 === 0) console.info('STOCKDEALER indexer checkpoint', toBlock);
         } catch (error) {
           await lockClient.query('ROLLBACK');
           throw error;
         }
         fromBlock = toBlock + 1;
+      }
+      if (lastCaughtUpBlock !== finalized.number) {
+        lastCaughtUpBlock = finalized.number;
+        console.info('STOCKDEALER indexer caught up', finalized.number);
       }
       await new Promise(resolve => setTimeout(resolve, 5_000));
     }

@@ -1,0 +1,103 @@
+{
+  "version": "1.0",
+  "chainId": "4663",
+  "createdAt": 1789331437645,
+  "meta": {
+    "name": "STOCKDEALER ownership acceptance 0xbbfbc2265c7247f8dceda18d1ac0c71820435cc43cffbdeea97f055c1475c085",
+    "description": "Safe batch to accept ownership before any economy activation",
+    "txBuilderVersion": "1.18.0",
+    "createdFromSafeAddress": "0xA5fFD738A6d0fE8642eDc2762555Aaf1e2a48F8F",
+    "createdFromOwnerAddress": "",
+    "checksum": "0xbbfbc2265c7247f8dceda18d1ac0c71820435cc43cffbdeea97f055c1475c085",
+    "safeAttestation": {
+      "address": "0xA5fFD738A6d0fE8642eDc2762555Aaf1e2a48F8F",
+      "proxyCodeHash": "0xd7d408ebcd99b2b70be43e20253d6d92a8ea8fab29bd3be7f55b10032331fb4c",
+      "singleton": "0x41675C099F32341bf84BFc5382aF534df5C7461a",
+      "singletonCodeHash": "0x1fe2df852ba3299d6534ef416eefa406e56ced995bca886ab7a553e6d0c5e1c4",
+      "factory": "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67",
+      "factoryCodeHash": "0x50c3cdc4074750a7a974204a716c999edd37482f907608d960b2b025ee0b3317",
+      "deploymentTxHash": "0x8fd727ce931163d87881b6428353059cf9630606b8808abb645b48ed0c5f7fb4",
+      "version": "1.4.1",
+      "owners": [
+        "0x53109fe9A2DE96E6bC0b681713BaE6BE2B78765F"
+      ],
+      "threshold": 1,
+      "modules": [],
+      "guard": "0x0000000000000000000000000000000000000000",
+      "nonce": "66"
+    },
+    "planDigest": "0x589ce6c3e19fb2f6e2140a8f99628daea8902f0d3435eaf58b68378980ce8f0c"
+  },
+  "transactions": [
+    {
+      "to": "0x940507b21f3692a0164E1f0200846Ea176F659fC",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xB4f283161FE53467212244A6B3FDB721Bc421Bf6",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x4E7db3F33E495D4932bD5460B25Ca36dB0D403C5",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x3CfAAED1ee054ce3726afEeCA7C251a3F1a4f34D",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x807a34DA8AEe9C76B396BEf752691467834A3c64",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x574d06b2E54738Ca46970050B515eD432f97c854",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xf308711E83622718DEB1ba9D6539F074b1FFA018",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xbCD9C2a07936a5929dceC5486076B7eCeEcA1B5a",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0xeE0Fa83A41A1405484c12AAD12c25f987e3096e3",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    },
+    {
+      "to": "0x57F3305A31A9745b806F9Ef17B0AfDC6945C431E",
+      "value": "0",
+      "data": "0x79ba5097",
+      "contractMethod": null,
+      "contractInputsValues": null
+    }
+  ]
+}

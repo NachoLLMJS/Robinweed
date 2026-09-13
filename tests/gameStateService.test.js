@@ -11,6 +11,8 @@ const gameCore = {
   houseOwner: async id => id === 2 ? wallet : '0x0000000000000000000000000000000000000000',
   plants: async (_house, plot) => plot === 0 ? [msft, 100n, 200n, `0x${'9'.repeat(64)}`] : empty,
   plantStage: async (_house, plot) => plot === 0 ? 3n : 0n,
+  warehousePlants: async (_wallet, plot) => plot === 1 ? [msft, 300n, 400n, `0x${'8'.repeat(64)}`] : empty,
+  warehousePlantStage: async (_wallet, plot) => plot === 1 ? 5n : 0n,
 };
 const vaults = new Map([['MSFT', { remainingSeeds: async () => 3n, unassignedCredit: async () => 45n }]]);
 
@@ -19,7 +21,10 @@ test('wallet state snapshot derives owned houses, crops and funded seed balances
   assert.equal(snapshot.blockNumber, 123);
   assert.equal(snapshot.blockHash, `0x${'a'.repeat(64)}`);
   assert.equal(snapshot.properties[1].owner, wallet);
-  assert.deepEqual(snapshot.crops, [{ houseId: 2, plotId: 0, ticker: 'MSFT', plantedAt: 100, wateredAt: 200, stage: 3 }]);
+  assert.deepEqual(snapshot.crops, [
+    { location: 'house', houseId: 2, plotId: 0, ticker: 'MSFT', plantedAt: 100, wateredAt: 200, stage: 3 },
+    { location: 'warehouse', plotId: 1, ticker: 'MSFT', plantedAt: 300, wateredAt: 400, stage: 5 },
+  ]);
   assert.deepEqual(snapshot.seeds.MSFT, { remaining: '3', unassignedRawCredit: '45' });
 });
 

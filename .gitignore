@@ -10,6 +10,7 @@ meshy-task.json
 assets/meshy-tasks*/
 assets/references*/
 assets/meshy-originals*/
+videos/
 .env
 .env.*
 !.env.example

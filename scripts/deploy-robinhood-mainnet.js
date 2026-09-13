@@ -3,11 +3,12 @@ import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { externalConfigPath } from './lib/localPaths.js';
 import { Contract, ContractFactory, JsonRpcProvider, Wallet, ZeroAddress, getAddress, getCreateAddress, keccak256, toUtf8Bytes } from 'ethers';
 
 const CHAIN_ID = 4663;
 const OFFICIAL_SWAP_ROUTER_02 = '0xCaf681a66D020601342297493863E78C959E5cb2';
-const DEFAULT_ENV = 'C:\\Users\\nacho\\Desktop\\STOCKDEALER_MAINNET_DEPLOY.env';
+const DEFAULT_ENV = externalConfigPath('STOCKDEALER_MAINNET_DEPLOY.env');
 const JOURNAL = resolve('deployments/robinhood-mainnet-foundation.json');
 const SAFE_OWNERSHIP_PATH = resolve('deployments/safe-accept-ownership-batch.json');
 const STOCKS = Object.freeze({ AAPL:'0xaF3D76f1834A1d425780943C99Ea8A608f8a93f9',GOOGL:'0x2e0847E8910a9732eB3fb1bb4b70a580ADAD4FE3',MSFT:'0xe93237C50D904957Cf27E7B1133b510C669c2e74',MSTR:'0xec262a75e413fAfD0dF80480274532C79D42da09',NVDA:'0xd0601CE157Db5bdC3162BbaC2a2C8aF5320D9EEC',QQQ:'0xD5f3879160bc7c32ebb4dC785F8a4F505888de68',TSLA:'0x322F0929c4625eD5bAd873c95208D54E1c003b2d' });

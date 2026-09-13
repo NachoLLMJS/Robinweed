@@ -21,6 +21,9 @@ export function projectionOperations({ contractName, eventName, args, meta }) {
   if (contractName === 'GameCore' && eventName === 'SeedPlanted') return [{ kind: 'crop-plant', values: { ...base, owner: addressBytes(args.owner), houseId: Number(args.houseId), plotId: Number(args.plotId), ticker: decodeBytes32String(args.ticker), rewardPosition: hashBytes(args.rewardPosition) } }];
   if (contractName === 'GameCore' && eventName === 'PlantWatered') return [{ kind: 'crop-water', values: { ...base, houseId: Number(args.houseId), plotId: Number(args.plotId), wateredAt: new Date(Number(args.wateredAt) * 1000) } }];
   if (contractName === 'GameCore' && eventName === 'HarvestClaimed') return [{ kind: 'crop-claim', values: { ...base, houseId: Number(args.houseId), plotId: Number(args.plotId) } }];
+  if (contractName === 'GameCore' && eventName === 'WarehouseSeedPlanted') return [{ kind: 'warehouse-crop-plant', values: { ...base, owner: addressBytes(args.owner), plotId: Number(args.plotId), ticker: decodeBytes32String(args.ticker), rewardPosition: hashBytes(args.rewardPosition) } }];
+  if (contractName === 'GameCore' && eventName === 'WarehousePlantWatered') return [{ kind: 'warehouse-crop-water', values: { ...base, owner: addressBytes(args.owner), plotId: Number(args.plotId), wateredAt: new Date(Number(args.wateredAt) * 1000) } }];
+  if (contractName === 'GameCore' && eventName === 'WarehouseHarvestClaimed') return [{ kind: 'warehouse-crop-claim', values: { ...base, owner: addressBytes(args.owner), plotId: Number(args.plotId) } }];
   return [];
 }
 
@@ -34,6 +37,9 @@ export async function applyProjectionOperations(client, operations) {
     else if (operation.kind === 'crop-plant') await client.query(`INSERT INTO crop_positions (chain_id,house_id,plot_id,owner,ticker,reward_position,planted_at,updated_block) VALUES (4663,$1,$2,$3,$4,$5,$6,$7) ON CONFLICT (chain_id,house_id,plot_id) DO UPDATE SET owner=$3,ticker=$4,reward_position=$5,planted_at=$6,watered_at=NULL,claimed_at=NULL,updated_block=$7`, [v.houseId, v.plotId, v.owner, v.ticker, v.rewardPosition, v.blockTime, v.blockNumber]);
     else if (operation.kind === 'crop-water') requireOneRow(await client.query(`UPDATE crop_positions SET watered_at=$1,updated_block=$2 WHERE chain_id=4663 AND house_id=$3 AND plot_id=$4 AND claimed_at IS NULL AND watered_at IS NULL`, [v.wateredAt, v.blockNumber, v.houseId, v.plotId]));
     else if (operation.kind === 'crop-claim') requireOneRow(await client.query(`UPDATE crop_positions SET claimed_at=$1,updated_block=$2 WHERE chain_id=4663 AND house_id=$3 AND plot_id=$4 AND claimed_at IS NULL`, [v.blockTime, v.blockNumber, v.houseId, v.plotId]));
+    else if (operation.kind === 'warehouse-crop-plant') await client.query(`INSERT INTO warehouse_crop_positions (chain_id,owner,plot_id,ticker,reward_position,planted_at,updated_block) VALUES (4663,$1,$2,$3,$4,$5,$6) ON CONFLICT (chain_id,owner,plot_id) DO UPDATE SET ticker=$3,reward_position=$4,planted_at=$5,watered_at=NULL,claimed_at=NULL,updated_block=$6`, [v.owner, v.plotId, v.ticker, v.rewardPosition, v.blockTime, v.blockNumber]);
+    else if (operation.kind === 'warehouse-crop-water') requireOneRow(await client.query(`UPDATE warehouse_crop_positions SET watered_at=$1,updated_block=$2 WHERE chain_id=4663 AND owner=$3 AND plot_id=$4 AND claimed_at IS NULL AND watered_at IS NULL`, [v.wateredAt, v.blockNumber, v.owner, v.plotId]));
+    else if (operation.kind === 'warehouse-crop-claim') requireOneRow(await client.query(`UPDATE warehouse_crop_positions SET claimed_at=$1,updated_block=$2 WHERE chain_id=4663 AND owner=$3 AND plot_id=$4 AND claimed_at IS NULL`, [v.blockTime, v.blockNumber, v.owner, v.plotId]));
     else if (operation.kind === 'outbox') await client.query(`INSERT INTO outbox (chain_id,tx_hash,log_index,topic,payload) VALUES (4663,$1,$2,$3,$4) ON CONFLICT DO NOTHING`, [v.txHash, v.logIndex, v.topic, JSON.stringify(v.payload)]);
   }
 }

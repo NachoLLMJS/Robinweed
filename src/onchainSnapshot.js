@@ -18,9 +18,13 @@ export function validateOnchainSnapshot(snapshot, expectedAddress) {
   }
   const cropKeys = new Set();
   for (const crop of snapshot.crops) {
-    const key = `${crop?.houseId}:${crop?.plotId}`;
+    const location = crop?.location ?? 'house';
+    const key = location === 'warehouse' ? `warehouse:${crop?.plotId}` : `house:${crop?.houseId}:${crop?.plotId}`;
     const property = propertiesByHouseId.get(crop?.houseId);
-    if (!Number.isInteger(crop?.houseId) || crop.houseId < 1 || crop.houseId > 35 || !property || property.owner.toLowerCase() !== expectedAddress.toLowerCase() || !Number.isInteger(crop.plotId) || crop.plotId < 0 || crop.plotId >= property.capacity || cropKeys.has(key) || !SYMBOL_SET.has(crop.ticker) || !Number.isSafeInteger(crop.plantedAt) || crop.plantedAt < 0 || !Number.isSafeInteger(crop.wateredAt) || crop.wateredAt < 0 || !Number.isInteger(crop.stage) || crop.stage < 1 || crop.stage > 5) throw new Error('INVALID_CROP_STATE');
+    const locationValid = location === 'warehouse'
+      ? crop.houseId === undefined && Number.isInteger(crop.plotId) && crop.plotId >= 0 && crop.plotId < 8
+      : location === 'house' && Number.isInteger(crop?.houseId) && crop.houseId >= 1 && crop.houseId <= 35 && property && property.owner.toLowerCase() === expectedAddress.toLowerCase() && Number.isInteger(crop.plotId) && crop.plotId >= 0 && crop.plotId < property.capacity;
+    if (!locationValid || cropKeys.has(key) || !SYMBOL_SET.has(crop.ticker) || !Number.isSafeInteger(crop.plantedAt) || crop.plantedAt < 0 || !Number.isSafeInteger(crop.wateredAt) || crop.wateredAt < 0 || !Number.isInteger(crop.stage) || crop.stage < 1 || crop.stage > 5) throw new Error('INVALID_CROP_STATE');
     cropKeys.add(key);
   }
   if (Object.keys(snapshot.seeds).sort().join(',') !== [...SYMBOLS].sort().join(',')) throw new Error('INVALID_SEED_CATALOG');

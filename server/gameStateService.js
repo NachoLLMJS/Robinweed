@@ -21,8 +21,14 @@ export async function readWalletGameState({ address, gameCore, propertyIds, vaul
       const [plant, stage] = await Promise.all([gameCore.plants(property.houseId, plotId, ...overrides), gameCore.plantStage(property.houseId, plotId, ...overrides)]);
       const [ticker, plantedAt, wateredAt] = plant;
       if (ticker === `0x${'0'.repeat(64)}`) continue;
-      crops.push({ houseId: property.houseId, plotId, ticker: decodeBytes32String(ticker), plantedAt: Number(plantedAt), wateredAt: Number(wateredAt), stage: Number(stage) });
+      crops.push({ location: 'house', houseId: property.houseId, plotId, ticker: decodeBytes32String(ticker), plantedAt: Number(plantedAt), wateredAt: Number(wateredAt), stage: Number(stage) });
     }
+  }
+  for (let plotId = 0; plotId < 8; plotId += 1) {
+    const [plant, stage] = await Promise.all([gameCore.warehousePlants(wallet, plotId, ...overrides), gameCore.warehousePlantStage(wallet, plotId, ...overrides)]);
+    const [ticker, plantedAt, wateredAt] = plant;
+    if (ticker === `0x${'0'.repeat(64)}`) continue;
+    crops.push({ location: 'warehouse', plotId, ticker: decodeBytes32String(ticker), plantedAt: Number(plantedAt), wateredAt: Number(wateredAt), stage: Number(stage) });
   }
   const seeds = {};
   for (const [symbol, vault] of vaults) {

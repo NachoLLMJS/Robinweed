@@ -2,12 +2,13 @@ import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { externalConfigPath } from './lib/localPaths.js';
 import { Contract, Interface, JsonRpcProvider, ZeroAddress, getAddress, keccak256, parseUnits, toUtf8Bytes } from 'ethers';
 import { validateActivationConfig } from './lib/activationConfig.js';
 
 const CHAIN_ID = 4663;
-const ENV_PATH = process.env.STOCKDEALER_MAINNET_ENV ?? 'C:\\Users\\nacho\\Desktop\\STOCKDEALER_MAINNET_DEPLOY.env';
-const ACTIVATION_PATH = process.env.STOCKDEALER_ACTIVATION_CONFIG ?? 'C:\\Users\\nacho\\Desktop\\STOCKDEALER_MAINNET_ACTIVATION.json';
+const ENV_PATH = process.env.STOCKDEALER_MAINNET_ENV ?? externalConfigPath('STOCKDEALER_MAINNET_DEPLOY.env');
+const ACTIVATION_PATH = process.env.STOCKDEALER_ACTIVATION_CONFIG ?? externalConfigPath('STOCKDEALER_MAINNET_ACTIVATION.json');
 const FOUNDATION_PATH = resolve('deployments/robinhood-mainnet-foundation.json');
 const SAFE_BATCH_PATH = resolve('deployments/safe-activation-batch.json');
 const QUOTER_V2 = '0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7';

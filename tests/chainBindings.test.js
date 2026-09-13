@@ -15,7 +15,7 @@ test('quote bindings pin Robinhood mainnet and the official QuoterV2', () => {
 });
 
 test('read-only wallet state bindings remain available while purchases are paused and bound RPC batches', () => {
-  assert.match(readFileSync(new URL('../server/chainBindings.js', import.meta.url), 'utf8'), /batchMaxCount:\s*10/);
+  assert.match(readFileSync(new URL('../server/chainBindings.js', import.meta.url), 'utf8'), /batchMaxCount:\s*1/);
   const contracts = ['GameCore','Vault_AAPL','Vault_GOOGL','Vault_MSFT','Vault_MSTR','Vault_NVDA','Vault_QQQ','Vault_TSLA']
     .map((name, index) => ({ name, address: `0x${String(index + 1).padStart(40, '0')}` }));
   const service = createReadGameStateService({

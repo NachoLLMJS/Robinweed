@@ -23,7 +23,7 @@
   "models-v19/city/low-poly-house-new3.glb": "c91d09a22e7ae7cb707bdf22fdd209cd08e60dcc40c65dbcac646eef842cdddf",
   "models-v19/city/low-poly-house-new4.glb": "9fdeacf0bda29c6670281b0f25f6402b468c25d2daf6221609f3b4b792bcad66",
   "models-v19/city/low-poly-house-neww.glb": "52e395d63393e33a353907bb12036215eb8d8deabc5176340636e19a2b79e81f",
-  "models-v19/warehouse/warehouse.glb": "5e886df1d80ba50025d41bfe2a3971740e191581398c25acf56ad9356be09634",
+  "models-v19/warehouse/warehouse.glb": "17c8e3172cbe78ed9122d76630a2ef1264daf83146d000fe8520fbe97dbc74b4",
   "models-v20/city/low-poly-house-67-ground-clean.glb": "fd4477ff1c23b56937c80778f9ee1c7dbe8a4c044aaa2e43ffab66e9d366f5be",
   "models-v21/city-pack/commercial-purple.glb": "16f0c61623a81f61a724b0983bb4e46a4932448981ced29798887674815bc4a6",
   "models-v21/city-pack/commercial-tower.glb": "48661205d847dd8683a21f3fe3669bfcc3b980191dce0c337c09a96aba0acbd8",
@@ -70,5 +70,5 @@
   "models-v9/street/tree.glb": "60771dd8279d360f295c6dc5f7f5274ee72de9dc5c8a58e76b34d2e289489fb9",
   "textures/warehouse/pizarra.png": "2cde3795dd2f75c559a972993026e617c43f16c7680216b09dfd2893ce087a19",
   "textures/warehouse/the-stock-dealer-wall-logo.png": "dd3d66fdbe3148b223660e29c4d46cef354c3fffa666476db2cf3c93ace472d4",
-  "video/stockdealer-corridor-trailer.mp4": "6747e462f4a716c8d8b8c1fd60286018777201888a65a869f74b087ecfd4279a"
+  "video/stockdealer-corridor-trailer.mp4": "e311e1508ce1a310121617902ff09d878b9f0504cbc3596ac5f1f9401a7e7001"
 }

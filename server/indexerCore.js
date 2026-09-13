@@ -11,8 +11,15 @@ export async function corroboratedFinalizedHead(primary, secondary) {
   if (!primaryBlock || !secondaryBlock || !Number.isSafeInteger(primaryBlock.number) || !Number.isSafeInteger(secondaryBlock.number)) {
     throw new Error('FINALIZED_TAG_UNAVAILABLE');
   }
-  if (!HASH.test(primaryBlock.hash ?? '') || primaryBlock.number !== secondaryBlock.number || primaryBlock.hash.toLowerCase() !== secondaryBlock.hash?.toLowerCase()) {
-    throw new Error('FINALITY_DISAGREEMENT');
+  if (!HASH.test(primaryBlock.hash ?? '') || !HASH.test(secondaryBlock.hash ?? '')) throw new Error('FINALITY_DISAGREEMENT');
+  if (primaryBlock.number === secondaryBlock.number) {
+    if (primaryBlock.hash.toLowerCase() !== secondaryBlock.hash.toLowerCase()) throw new Error('FINALITY_DISAGREEMENT');
+    return Object.freeze({ number: primaryBlock.number, hash: primaryBlock.hash });
   }
-  return Object.freeze({ number: primaryBlock.number, hash: primaryBlock.hash });
+  const primaryLeads = primaryBlock.number > secondaryBlock.number;
+  const lower = primaryLeads ? secondaryBlock : primaryBlock;
+  const higherProvider = primaryLeads ? primary : secondary;
+  const corroboratingBlock = await higherProvider.getBlock(lower.number);
+  if (!corroboratingBlock || corroboratingBlock.number !== lower.number || !HASH.test(corroboratingBlock.hash ?? '') || corroboratingBlock.hash.toLowerCase() !== lower.hash.toLowerCase()) throw new Error('FINALITY_DISAGREEMENT');
+  return Object.freeze({ number: lower.number, hash: lower.hash });
 }
