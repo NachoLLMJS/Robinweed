@@ -175,6 +175,24 @@ test('explicit wallet rejection clears only an unbroadcast unapproved journal', 
   assert.notEqual(ambiguous.value, null);
 });
 
+test('reconciliation clears a seed journal that failed before any transaction was prepared', async () => {
+  const storage = makeStorage(JSON.stringify({
+    type: 'SEED_PURCHASE',
+    symbol: 'MSTR',
+    account,
+    totalPrice: '100000000000000000000',
+    status: 'preparedApproval',
+    createdAt: 1_000,
+  }));
+  const ethereum = { request: async ({ method }) => {
+    if (method === 'eth_chainId') return '0x1237';
+    if (method === 'eth_accounts') return [account];
+    throw new Error(`unexpected ${method}`);
+  } };
+  assert.deepEqual(await reconcileEconomyJournal({ ethereum, account, storage, locks }), { status: 'PREPARATION_FAILED_NOT_BROADCAST' });
+  assert.equal(storage.value, null);
+});
+
 test('reconciliation validates transaction target, calldata hash, and nonce before trusting a receipt', async () => {
   const data = '0x1234';
   const hash = `0x${'a'.repeat(64)}`;

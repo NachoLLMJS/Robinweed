@@ -209,6 +209,11 @@ export async function reconcileEconomyJournal({ ethereum, account, storage = loc
     const chainId = await ethereum.request({ method: 'eth_chainId' });
     const accounts = await ethereum.request({ method: 'eth_accounts' });
     if (chainId?.toLowerCase() !== '0x1237' || accounts?.[0]?.toLowerCase() !== account.toLowerCase()) throw new Error('WALLET_CONTEXT_MISMATCH');
+    const failedBeforePreparation = journal.status === 'preparedApproval' && !journal.approvalPrepared && !journal.actionPrepared && !journal.prepared && !journal.approvalHash && !journal.hash && journal.approvalConfirmed !== true;
+    if (failedBeforePreparation) {
+      storage.removeItem(JOURNAL_KEY);
+      return Object.freeze({ status: 'PREPARATION_FAILED_NOT_BROADCAST' });
+    }
     const isActionHash = Boolean(journal.hash);
     const isApprovalHash = !isActionHash && Boolean(journal.approvalHash);
     const hash = isActionHash ? journal.hash : journal.approvalHash;
