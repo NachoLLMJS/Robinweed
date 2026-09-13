@@ -21,6 +21,7 @@ const VAULT_READ_ABI = ['function remainingSeeds(address) view returns (uint256)
 const ERC20_SIM_ABI = ['function balanceOf(address) view returns(uint256)','function transfer(address,uint256) returns(bool)','function approve(address,uint256) returns(bool)'];
 const QUOTER_ABI = ['function quoteExactInput(bytes path,uint256 amountIn) returns (uint256 amountOut,uint160[] sqrtPriceX96AfterList,uint32[] initializedTicksCrossedList,uint256 gasEstimate)'];
 const QUOTER = '0x33e885eD0Ec9bF04EcfB19341582aADCb4c8A9E7';
+const QUOTE_CONFIRMATION_BLOCKS = 100;
 
 const createProvider = config => new JsonRpcProvider(config.rpcPrimary, 4663, { staticNetwork: true, batchMaxCount: 1 });
 const createQuoteProvider = config => new JsonRpcProvider(config.rpcQuote, 4663, { staticNetwork: true, batchMaxCount: 1 });
@@ -32,6 +33,14 @@ export function serializeRpcReads(operation) {
     tail = result.catch(() => undefined);
     return result;
   };
+}
+
+export async function createConfirmedQuoteContext(provider, gameCoreAddress, economyRouterAddress) {
+  const latest = await provider.getBlock('latest');
+  if (!latest || !Number.isSafeInteger(latest.number) || latest.number < QUOTE_CONFIRMATION_BLOCKS) throw new Error('QUOTE_BLOCK_UNAVAILABLE');
+  const block = await provider.getBlock(latest.number - QUOTE_CONFIRMATION_BLOCKS);
+  if (!block || !Number.isSafeInteger(block.number) || !Number.isSafeInteger(block.timestamp) || typeof block.hash !== 'string') throw new Error('QUOTE_BLOCK_UNAVAILABLE');
+  return { gameCore: gameCoreAddress, economyRouter: economyRouterAddress, quoteBlock: block.number, quoteBlockHash: block.hash, quoteBlockTimestamp: block.timestamp, deadline: block.timestamp + 300 };
 }
 
 function bindings(config) {
@@ -47,7 +56,7 @@ function bindings(config) {
       gameCore: new Contract(gameCoreAddress, GAME_CORE_READ_ABI, provider),
       router: new Contract(economyRouterAddress, ROUTER_READ_ABI, provider),
       quoter: new Contract(QUOTER, QUOTER_ABI, provider),
-      quoteContext: async () => { const block=await provider.getBlock('latest');if(!block||!Number.isSafeInteger(block.number))throw new Error('QUOTE_BLOCK_UNAVAILABLE');return{gameCore:gameCoreAddress,economyRouter:economyRouterAddress,quoteBlock:block.number,quoteBlockHash:block.hash,quoteBlockTimestamp:block.timestamp,deadline:block.timestamp+300}; },
+      quoteContext: () => createConfirmedQuoteContext(provider, gameCoreAddress, economyRouterAddress),
       async quoteRoute({currency,target,adapterAddress,amountIn,receiver,deadline,blockTag,path}) {
         let curve;
         try { [curve]=AbiCoder.defaultAbiCoder().decode(['address','address','bytes'],path);curve=getAddress(curve); }

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createQuoteSeedService, createReadGameStateService, serializeRpcReads } from '../server/chainBindings.js';
+import { createConfirmedQuoteContext, createQuoteSeedService, createReadGameStateService, serializeRpcReads } from '../server/chainBindings.js';
 
 test('quote bindings stay absent while economy is inactive or required contracts are missing', () => {
   assert.equal(createQuoteSeedService({ publicConfig: { economyActive: false, contracts: [] } }), null);
@@ -18,6 +18,21 @@ test('purchase quotes use the wallet-default official Robinhood RPC independentl
   const source = readFileSync(new URL('../server/chainBindings.js', import.meta.url), 'utf8');
   assert.match(source, /createQuoteProvider\s*=\s*config\s*=>[^;]*config\.rpcQuote/);
   assert.match(source, /function bindings[\s\S]*createQuoteProvider\(config\)/);
+});
+
+test('purchase quotes anchor one hundred blocks behind the official RPC head', async () => {
+  const calls = [];
+  const provider = { getBlock: async tag => {
+    calls.push(tag);
+    if (tag === 'latest') return { number: 10_000, hash: `0x${'a'.repeat(64)}`, timestamp: 2_000 };
+    if (tag === 9_900) return { number: 9_900, hash: `0x${'b'.repeat(64)}`, timestamp: 1_990 };
+    return null;
+  } };
+  const context = await createConfirmedQuoteContext(provider, '0x1111111111111111111111111111111111111111', '0x2222222222222222222222222222222222222222');
+  assert.deepEqual(calls, ['latest', 9_900]);
+  assert.equal(context.quoteBlock, 9_900);
+  assert.equal(context.quoteBlockTimestamp, 1_990);
+  assert.equal(context.deadline, 2_290);
 });
 
 test('read-only wallet state bindings remain available while purchases are paused and bound RPC batches', () => {
