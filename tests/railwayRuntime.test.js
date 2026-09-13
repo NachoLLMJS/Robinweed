@@ -17,8 +17,9 @@ test('Railway pins a Vite-compatible Node runtime and never repeats npm ci insid
 });
 
 test('Railway starts the production API only after its idempotent database migration', () => {
-  assert.equal(packageJson.scripts.start, 'node server/start.js');
+  assert.equal(packageJson.scripts.start, 'node server/bootstrap.js');
   assert.match(railway, /startCommand = "npm run db:migrate && npm start"/);
+  assert.match(readFileSync(new URL('../server/bootstrap.js', import.meta.url), 'utf8'), /migrate\.js[\s\S]*start\.js/);
   assert.match(launcher, /FLY_ROLE/);
   assert.match(launcher, /import\('\.\/indexer\.js'\)/);
   assert.doesNotMatch(railway, /preDeployCommand/);
