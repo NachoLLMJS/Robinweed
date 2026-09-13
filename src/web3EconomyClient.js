@@ -26,6 +26,12 @@ function rpcQuantity(value, errorCode) {
   return parsed;
 }
 
+export function normalizeReceiptStatus(value) {
+  if (value === 0 || value === '0x0') return 0;
+  if (value === 1 || value === '0x1') return 1;
+  throw new Error('INVALID_RECEIPT_STATUS');
+}
+
 function configuredAddress(config, name) {
   const matches = config?.contracts?.filter(contract => contract.name === name) ?? [];
   if (matches.length !== 1) throw new Error(`${name.toUpperCase()}_NOT_CONFIGURED`);
@@ -85,17 +91,20 @@ export async function waitForCanonicalReceipt(ethereum, hash, { pollMs = 1_500, 
   while (Date.now() < deadline) {
     const receipt = await ethereum.request({ method: 'eth_getTransactionReceipt', params: [hash] });
     if (receipt) {
-      if (!['0x0','0x1'].includes(receipt.status)) throw new Error('INVALID_RECEIPT_STATUS');
+      const status = normalizeReceiptStatus(receipt.status);
       if (receipt.transactionHash?.toLowerCase() !== hash.toLowerCase()) throw new Error('RECEIPT_IDENTITY_MISMATCH');
       if (!TRANSACTION_HASH.test(receipt.blockHash ?? '')) throw new Error('INVALID_RECEIPT_BLOCK');
       const receiptBlock = rpcQuantity(receipt.blockNumber, 'INVALID_RECEIPT_BLOCK');
+      const receiptBlockTag = `0x${receiptBlock.toString(16)}`;
       const latestBlock = rpcQuantity(await ethereum.request({ method: 'eth_blockNumber' }), 'INVALID_RECEIPT_BLOCK');
       if (latestBlock >= receiptBlock + confirmations - 1) {
         const [canonicalBlock, finalReceipt] = await Promise.all([
-          ethereum.request({ method: 'eth_getBlockByNumber', params: [receipt.blockNumber, false] }),
+          ethereum.request({ method: 'eth_getBlockByNumber', params: [receiptBlockTag, false] }),
           ethereum.request({ method: 'eth_getTransactionReceipt', params: [hash] }),
         ]);
-        if (canonicalBlock?.hash?.toLowerCase() !== receipt.blockHash.toLowerCase() || finalReceipt?.blockHash?.toLowerCase() !== receipt.blockHash.toLowerCase() || finalReceipt?.blockNumber !== receipt.blockNumber || finalReceipt?.transactionHash?.toLowerCase() !== hash.toLowerCase() || finalReceipt?.status !== receipt.status) throw new Error('TRANSACTION_REORGED');
+        const finalStatus = normalizeReceiptStatus(finalReceipt?.status);
+        const finalBlock = rpcQuantity(finalReceipt?.blockNumber, 'INVALID_RECEIPT_BLOCK');
+        if (canonicalBlock?.hash?.toLowerCase() !== receipt.blockHash.toLowerCase() || finalReceipt?.blockHash?.toLowerCase() !== receipt.blockHash.toLowerCase() || finalBlock !== receiptBlock || finalReceipt?.transactionHash?.toLowerCase() !== hash.toLowerCase() || finalStatus !== status) throw new Error('TRANSACTION_REORGED');
         return finalReceipt;
       }
     }
@@ -106,6 +115,6 @@ export async function waitForCanonicalReceipt(ethereum, hash, { pollMs = 1_500, 
 
 export async function waitForSuccessfulReceipt(ethereum, hash, options) {
   const receipt = await waitForCanonicalReceipt(ethereum, hash, options);
-  if (receipt.status !== '0x1') throw new Error('TRANSACTION_REVERTED');
+  if (normalizeReceiptStatus(receipt.status) !== 1) throw new Error('TRANSACTION_REVERTED');
   return receipt;
 }

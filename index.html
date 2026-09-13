@@ -81,6 +81,22 @@
         </div>
       </aside>
 
+      <section id="onchainPurchaseConfirmation" class="portal-confirm hidden" role="dialog" aria-modal="true" aria-labelledby="onchainPurchaseTitle">
+        <div class="portal-card onchain-purchase-card">
+          <button class="close" data-close aria-label="Close onchain purchase confirmation">×</button>
+          <p class="eyebrow">ROBINHOOD CHAIN · CANONICAL RECEIPT</p>
+          <h2 id="onchainPurchaseTitle">PURCHASE <span>CONFIRMED</span></h2>
+          <p>Your funded seeds were credited by the live contracts. This confirmation is shown only after a successful canonical receipt.</p>
+          <dl class="property-facts">
+            <div><dt>GENETIC</dt><dd id="onchainPurchaseTicker">—</dd></div>
+            <div><dt>SEEDS CREDITED</dt><dd id="onchainPurchaseSeeds">—</dd></div>
+            <div><dt>CONFIRMED BLOCK</dt><dd id="onchainPurchaseBlock">—</dd></div>
+          </dl>
+          <div class="onchain-purchase-hash"><small>TRANSACTION HASH</small><strong id="onchainPurchaseHash">—</strong></div>
+          <div class="portal-actions"><button data-close>CONTINUE TO WAREHOUSE</button></div>
+        </div>
+      </section>
+
       <aside id="propertyPanel" class="property-panel hidden" aria-label="Neighborhood property">
         <button class="close" data-close aria-label="Close property">×</button>
         <p class="eyebrow">NEIGHBORHOOD PROPERTY</p>

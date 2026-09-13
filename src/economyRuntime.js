@@ -1,5 +1,5 @@
-import { encodeBytes32String, getAddress, keccak256 } from 'ethers';
-import { approveCurrencyIfNeeded, sendGameAction, waitForCanonicalReceipt, waitForSuccessfulReceipt } from './web3EconomyClient.js';
+import { encodeBytes32String, getAddress, Interface, keccak256 } from 'ethers';
+import { approveCurrencyIfNeeded, normalizeReceiptStatus, sendGameAction, waitForCanonicalReceipt, waitForSuccessfulReceipt } from './web3EconomyClient.js';
 import { HOUSE_PROPERTIES } from './housePropertyState.js';
 import { onchainPropertyId } from './onchainPropertyCatalog.js';
 
@@ -18,6 +18,11 @@ const SYMBOLS = Object.freeze(['AAPL', 'GOOGL', 'MSFT', 'MSTR', 'NVDA', 'QQQ', '
 const QUOTE_WINDOW_SECONDS = 300;
 const MAX_QUOTE_AGE_SECONDS = 60;
 const HOUSE_CAPACITY = new Map(HOUSE_PROPERTIES.map(property => [onchainPropertyId(property.id), property.capacity]));
+const SEED_PURCHASE_EVENTS = new Interface(['event SeedPacksPurchased(address indexed buyer, bytes32 indexed ticker, uint32 packs, uint32 seeds, uint256 paid, uint256 rawStockCredit)']);
+
+async function reportProgress(onProgress, status) {
+  try { await onProgress(status); } catch { /* UI progress must never alter transaction semantics. */ }
+}
 const explicitWalletRejection = error => error?.code === 4001 || error?.code === 'ACTION_REJECTED' || /user rejected/i.test(error?.message ?? '');
 
 function validateConfig(config) {
@@ -99,7 +104,7 @@ export async function loadEconomyConfigWithRetry({ fetchImpl = fetch, maxAttempt
   throw lastError;
 }
 
-export async function executeSeedPurchase({ symbol, account, config, ethereum, fetchImpl = fetch, storage = localStorage, locks = navigator.locks, approve = approveCurrencyIfNeeded, send = sendGameAction, waitCanonical = waitForSuccessfulReceipt, now = Date.now }) {
+export async function executeSeedPurchase({ symbol, account, config, ethereum, fetchImpl = fetch, storage = localStorage, locks = navigator.locks, approve = approveCurrencyIfNeeded, send = sendGameAction, waitCanonical = waitForSuccessfulReceipt, authenticate = authenticateSeedPurchaseReceipt, now = Date.now, onProgress = async () => {} }) {
   validateConfig(config);
   if (!config.economyActive || !locks?.request || !storage) throw new Error('ECONOMY_NOT_READY');
   if (!SYMBOLS.includes(symbol)) throw new Error('SEED_NOT_SUPPORTED');
@@ -117,19 +122,26 @@ export async function executeSeedPurchase({ symbol, account, config, ethereum, f
     const journal = resumed ? { ...resumed, totalPrice: quote.totalPrice } : { type: 'SEED_PURCHASE', symbol, account: account.toLowerCase(), totalPrice: quote.totalPrice, status: 'preparedApproval', createdAt: now() };
     storage.setItem(JOURNAL_KEY, JSON.stringify(journal));
     try {
+      await reportProgress(onProgress, 'AWAITING_APPROVAL');
       const approvalHash = await approve({ ethereum, config, account, amount: totalPrice, onPrepared: approvalPrepared => { Object.assign(journal, { status: 'preparedApproval', approvalPrepared }); storage.setItem(JOURNAL_KEY, JSON.stringify(journal)); } });
       if (approvalHash) {
         journal.status = 'approvalBroadcast'; journal.approvalHash = approvalHash; storage.setItem(JOURNAL_KEY, JSON.stringify(journal));
+        await reportProgress(onProgress, 'APPROVAL_BROADCAST');
         await waitCanonical(ethereum, approvalHash);
         journal.status = 'approvalConfirmed'; journal.approvalConfirmed = true; storage.setItem(JOURNAL_KEY, JSON.stringify(journal));
+        await reportProgress(onProgress, 'APPROVAL_CONFIRMED');
       }
       await assertQuoteFresh(ethereum, quote);
       journal.status = 'preparedPurchase'; storage.setItem(JOURNAL_KEY, JSON.stringify(journal));
+      await reportProgress(onProgress, 'AWAITING_PURCHASE');
       const hash = await send({ ethereum, config, account, action: 'buySeedPacks', args: [quote.ticker, 1, totalPrice, minimumStockOut, deadline], onPrepared: actionPrepared => { Object.assign(journal, { status: 'preparedPurchase', actionPrepared }); storage.setItem(JOURNAL_KEY, JSON.stringify(journal)); } });
       journal.status = 'purchaseBroadcast'; journal.hash = hash; storage.setItem(JOURNAL_KEY, JSON.stringify(journal));
+      await reportProgress(onProgress, 'PURCHASE_BROADCAST');
       const receipt = await waitCanonical(ethereum, hash);
+      const creditedSeeds = await authenticate({ ethereum, receipt, hash, journal, account, symbol, totalPrice });
       storage.removeItem(JOURNAL_KEY);
-      return Object.freeze({ hash, receipt });
+      await reportProgress(onProgress, 'PURCHASE_CONFIRMED');
+      return Object.freeze({ hash, receipt, creditedSeeds });
     } catch (error) {
       if (!journal.hash && !journal.approvalConfirmed && explicitWalletRejection(error)) storage.removeItem(JOURNAL_KEY);
       throw error;
@@ -194,11 +206,31 @@ function validatePreparedTransaction(transaction, prepared, account) {
   if (!transaction || transaction.from?.toLowerCase() !== account.toLowerCase() || transaction.to?.toLowerCase() !== prepared.target.toLowerCase() || transactionNonce(transaction) !== prepared.nonce || !/^0x[0-9a-fA-F]*$/.test(input ?? '') || keccak256(input).toLowerCase() !== prepared.dataHash.toLowerCase()) throw new Error('TRANSACTION_IDENTITY_MISMATCH');
 }
 
+export async function authenticateSeedPurchaseReceipt({ ethereum, receipt, hash, journal, account, symbol, totalPrice }) {
+  validatePrepared(journal.actionPrepared, account);
+  const transaction = await ethereum.request({ method: 'eth_getTransactionByHash', params: [hash] });
+  if (transaction?.hash?.toLowerCase() !== hash.toLowerCase()) throw new Error('TRANSACTION_IDENTITY_MISMATCH');
+  validatePreparedTransaction(transaction, journal.actionPrepared, account);
+  const expectedCore = journal.actionPrepared.target.toLowerCase();
+  const matchingEvents = [];
+  for (const log of receipt?.logs ?? []) {
+    if (log?.address?.toLowerCase() !== expectedCore) continue;
+    try {
+      const parsed = SEED_PURCHASE_EVENTS.parseLog(log);
+      if (parsed?.name === 'SeedPacksPurchased') matchingEvents.push(parsed);
+    } catch { /* Ignore unrelated GameCore logs. */ }
+  }
+  if (matchingEvents.length !== 1) throw new Error('SEED_CREDIT_EVENT_MISMATCH');
+  const event = matchingEvents[0].args;
+  if (getAddress(event.buyer) !== getAddress(account) || String(event.ticker).toLowerCase() !== encodeBytes32String(symbol).toLowerCase() || event.packs !== 1n || event.seeds !== 4n || event.paid !== totalPrice || event.rawStockCredit <= 0n) throw new Error('SEED_CREDIT_EVENT_MISMATCH');
+  return Number(event.seeds);
+}
+
 function confirmedStatus(journal) {
   return journal.hash ? 'ACTION_CONFIRMED' : 'APPROVAL_CONFIRMED_RETRY_ACTION';
 }
 
-export async function reconcileEconomyJournal({ ethereum, account, storage = localStorage, locks = navigator.locks, waitCanonical = waitForCanonicalReceipt }) {
+export async function reconcileEconomyJournal({ ethereum, account, storage = localStorage, locks = navigator.locks, waitCanonical = waitForCanonicalReceipt, authenticate = authenticateSeedPurchaseReceipt }) {
   if (!ethereum?.request || !locks?.request || !storage) throw new Error('RECONCILIATION_UNAVAILABLE');
   return withEconomyOperation(locks, async () => {
     const raw = storage.getItem(JOURNAL_KEY);
@@ -236,10 +268,10 @@ export async function reconcileEconomyJournal({ ethereum, account, storage = loc
     if (transaction) validatePreparedTransaction(transaction, prepared, account);
     if (receipt) {
       if (!transaction) throw new Error('TRANSACTION_IDENTITY_MISMATCH');
-      if (!['0x0', '0x1'].includes(receipt.status)) throw new Error('INVALID_RECEIPT_STATUS');
+      normalizeReceiptStatus(receipt.status);
       const terminalReceipt=await waitCanonical(ethereum,hash);
-      if (!['0x0','0x1'].includes(terminalReceipt.status)) throw new Error('INVALID_RECEIPT_STATUS');
-      if (isApprovalHash && terminalReceipt.status === '0x1') {
+      const terminalStatus=normalizeReceiptStatus(terminalReceipt.status);
+      if (isApprovalHash && terminalStatus === 1) {
         journal.approvalConfirmed = true;
         journal.status = 'approvalConfirmed';
         delete journal.approvalHash;
@@ -247,8 +279,14 @@ export async function reconcileEconomyJournal({ ethereum, account, storage = loc
         storage.setItem(JOURNAL_KEY, JSON.stringify(journal));
         return Object.freeze({ status: 'APPROVAL_CONFIRMED_RETRY_ACTION', hash });
       }
+      let purchaseEvidence = {};
+      if (isActionHash && terminalStatus === 1 && journal.type === 'SEED_PURCHASE') {
+        if (!SYMBOLS.includes(journal.symbol) || !positiveDecimal(journal.totalPrice)) throw new Error('CORRUPT_ECONOMY_JOURNAL');
+        const creditedSeeds = await authenticate({ ethereum, receipt: terminalReceipt, hash, journal, account, symbol: journal.symbol, totalPrice: BigInt(journal.totalPrice) });
+        purchaseEvidence = { symbol: journal.symbol, creditedSeeds, receipt: terminalReceipt };
+      }
       storage.removeItem(JOURNAL_KEY);
-      return Object.freeze({ status: terminalReceipt.status === '0x1' ? confirmedStatus(journal) : 'TRANSACTION_REVERTED', hash });
+      return Object.freeze({ status: terminalStatus === 1 ? confirmedStatus(journal) : 'TRANSACTION_REVERTED', hash, ...purchaseEvidence });
     }
     if (transaction) return Object.freeze({ status: 'TRANSACTION_PENDING', hash });
     const [latestNonce, pendingNonce] = await Promise.all(['latest', 'pending'].map(tag => ethereum.request({ method: 'eth_getTransactionCount', params: [account, tag] }).then(value => quantity(value, 'INVALID_PENDING_NONCE'))));
@@ -276,11 +314,18 @@ export async function reconcileEconomyJournal({ ethereum, account, storage = loc
         validatePreparedTransaction(replacement, prepared, account);
         const replacementReceipt = await ethereum.request({ method: 'eth_getTransactionReceipt', params: [replacement.hash] });
         if (!replacementReceipt) return Object.freeze({ status: 'ACTION_REPLACEMENT_PENDING', hash: replacement.hash });
-        if (!['0x0', '0x1'].includes(replacementReceipt.status)) throw new Error('INVALID_RECEIPT_STATUS');
+        normalizeReceiptStatus(replacementReceipt.status);
         const terminalReceipt=await waitCanonical(ethereum,replacement.hash);
-        if (!['0x0','0x1'].includes(terminalReceipt.status)) throw new Error('INVALID_RECEIPT_STATUS');
+        const terminalStatus=normalizeReceiptStatus(terminalReceipt.status);
+        let purchaseEvidence = {};
+        if (terminalStatus === 1 && journal.type === 'SEED_PURCHASE') {
+          if (!SYMBOLS.includes(journal.symbol) || !positiveDecimal(journal.totalPrice)) throw new Error('CORRUPT_ECONOMY_JOURNAL');
+          const replacementJournal = { ...journal, actionPrepared: prepared };
+          const creditedSeeds = await authenticate({ ethereum, receipt: terminalReceipt, hash: replacement.hash, journal: replacementJournal, account, symbol: journal.symbol, totalPrice: BigInt(journal.totalPrice) });
+          purchaseEvidence = { symbol: journal.symbol, creditedSeeds, receipt: terminalReceipt };
+        }
         storage.removeItem(JOURNAL_KEY);
-        return Object.freeze({ status: terminalReceipt.status === '0x1' ? confirmedStatus(journal) : 'TRANSACTION_REVERTED', hash: replacement.hash });
+        return Object.freeze({ status: terminalStatus === 1 ? confirmedStatus(journal) : 'TRANSACTION_REVERTED', hash: replacement.hash, ...purchaseEvidence });
       }
       return Object.freeze({ status: 'ACTION_REPLACED', hash });
     }
@@ -290,7 +335,7 @@ export async function reconcileEconomyJournal({ ethereum, account, storage = loc
 
 export async function executeCultivationAction({ action, args, account, config, ethereum, storage = localStorage, locks = navigator.locks, send = sendGameAction, waitCanonical = waitForSuccessfulReceipt, now = Date.now }) {
   validateConfig(config);
-  if (!config.economyActive || !['plant', 'water', 'claimHarvest'].includes(action) || !Array.isArray(args) || !locks?.request || !storage) throw new Error('INVALID_CULTIVATION_ACTION');
+  if (!config.economyActive || !['plant', 'water', 'claimHarvest', 'plantWarehouse', 'waterWarehouse', 'claimWarehouseHarvest'].includes(action) || !Array.isArray(args) || !locks?.request || !storage) throw new Error('INVALID_CULTIVATION_ACTION');
   return withEconomyOperation(locks, async () => {
     if (storage.getItem(JOURNAL_KEY)) throw new Error('UNRESOLVED_ECONOMY_OPERATION');
     const journal = { type: 'CULTIVATION', action, account: account.toLowerCase(), status: 'preparedAction', createdAt: now() };

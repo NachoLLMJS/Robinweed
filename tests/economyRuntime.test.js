@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { encodeBytes32String, keccak256 } from 'ethers';
-import { executeCultivationAction, executeHousePurchase, executeSeedPurchase, loadEconomyConfig, loadEconomyConfigWithRetry, reconcileEconomyJournal } from '../src/economyRuntime.js';
+import { encodeBytes32String, Interface, keccak256 } from 'ethers';
+import { authenticateSeedPurchaseReceipt, executeCultivationAction, executeHousePurchase, executeSeedPurchase, loadEconomyConfig, loadEconomyConfigWithRetry, reconcileEconomyJournal } from '../src/economyRuntime.js';
 
 const symbols = ['AAPL', 'GOOGL', 'MSFT', 'MSTR', 'NVDA', 'QQQ', 'TSLA'];
 const account = '0x1111111111111111111111111111111111111111';
@@ -44,15 +44,46 @@ test('economy config retry recovers when the first production request fails', as
 test('seed purchase pins the quote block and exact 300-second deadline before approval and send', async () => {
   const ethereum = quoteProvider();
   const calls = [];
+  const progress = [];
   const result = await executeSeedPurchase({ symbol: 'MSFT', account, config, ethereum, storage: makeStorage(), locks,
     fetchImpl: async () => ({ ok: true, json: async () => seedQuote() }),
     approve: async () => { calls.push('approve'); return null; },
     send: async () => { calls.push('send'); return `0x${'b'.repeat(64)}`; },
-    waitCanonical: async () => ({ status: '0x1' }), now: () => 1_000_000,
+    waitCanonical: async () => ({ status: '0x1', blockNumber: '0x70' }), authenticate: async () => 4, now: () => 1_000_000,
+    onProgress: async status => { progress.push(status); },
   });
   assert.equal(result.hash, `0x${'b'.repeat(64)}`);
+  assert.equal(result.creditedSeeds, 4);
   assert.deepEqual(calls, ['approve', 'send']);
+  assert.deepEqual(progress, ['AWAITING_APPROVAL', 'AWAITING_PURCHASE', 'PURCHASE_BROADCAST', 'PURCHASE_CONFIRMED']);
   assert.deepEqual(ethereum.calls.map(call => call.params[0]), ['0x64', 'latest', '0x64', 'latest']);
+});
+
+test('purchase progress callback failures cannot alter a confirmed purchase result', async () => {
+  const storage = makeStorage();
+  const result = await executeSeedPurchase({ symbol: 'MSFT', account, config, ethereum: quoteProvider(), storage, locks,
+    fetchImpl: async () => ({ ok: true, json: async () => seedQuote() }), approve: async () => null,
+    send: async () => `0x${'b'.repeat(64)}`, waitCanonical: async () => ({ status: '0x1' }), authenticate: async () => 4,
+    onProgress: async () => { throw new Error('UI_CALLBACK_FAILED'); },
+  });
+  assert.equal(result.creditedSeeds, 4);
+  assert.equal(storage.value, null);
+});
+
+test('seed purchase evidence authenticates the mined transaction and exact credit event', async () => {
+  const hash = `0x${'b'.repeat(64)}`;
+  const data = '0x1234';
+  const eventInterface = new Interface(['event SeedPacksPurchased(address indexed buyer, bytes32 indexed ticker, uint32 packs, uint32 seeds, uint256 paid, uint256 rawStockCredit)']);
+  const event = eventInterface.encodeEventLog(eventInterface.getEvent('SeedPacksPurchased'), [account, encodeBytes32String('MSFT'), 1, 4, 100, 60]);
+  const journal = { actionPrepared: { chainId: 4663, account, target: config.contracts[0].address, dataHash: keccak256(data), nonce: 7 } };
+  const ethereum = { request: async ({ method }) => {
+    assert.equal(method, 'eth_getTransactionByHash');
+    return { hash, from: account, to: config.contracts[0].address, input: data, nonce: 7 };
+  } };
+  const receipt = { logs: [{ address: config.contracts[0].address, ...event }] };
+  assert.equal(await authenticateSeedPurchaseReceipt({ ethereum, receipt, hash, journal, account, symbol: 'MSFT', totalPrice: 100n }), 4);
+  const wrongEvent = eventInterface.encodeEventLog(eventInterface.getEvent('SeedPacksPurchased'), [account, encodeBytes32String('MSFT'), 1, 3, 100, 60]);
+  await assert.rejects(authenticateSeedPurchaseReceipt({ ethereum, receipt: { logs: [{ address: config.contracts[0].address, ...wrongEvent }] }, hash, journal, account, symbol: 'MSFT', totalPrice: 100n }), /SEED_CREDIT_EVENT_MISMATCH/);
 });
 
 test('seed purchase accepts a recent official-RPC quote despite Robinhood producing more than twenty blocks during route simulation', async () => {
@@ -62,7 +93,7 @@ test('seed purchase accepts a recent official-RPC quote despite Robinhood produc
     fetchImpl: async () => ({ ok: true, json: async () => seedQuote() }),
     approve: async () => { calls.push('approve'); return null; },
     send: async () => { calls.push('send'); return `0x${'b'.repeat(64)}`; },
-    waitCanonical: async () => ({ status: '0x1' }),
+    waitCanonical: async () => ({ status: '0x1' }), authenticate: async () => 4,
   });
   assert.deepEqual(calls, ['approve', 'send']);
 });
@@ -141,6 +172,23 @@ test('cultivation action is journaled and receipt-confirmed without a payment ap
   assert.equal(storage.value, null);
 });
 
+test('warehouse cultivation actions are journaled and receipt-confirmed', async () => {
+  for (const [action, args] of [
+    ['plantWarehouse', [0, encodeBytes32String('MSFT')]],
+    ['waterWarehouse', [0]],
+    ['claimWarehouseHarvest', [0, account]],
+  ]) {
+    const storage = makeStorage();
+    const calls = [];
+    const result = await executeCultivationAction({ action, args, account, config, ethereum: {}, storage, locks,
+      send: async input => { calls.push(input); return `0x${'e'.repeat(64)}`; }, waitCanonical: async () => ({ status: '0x1' }) });
+    assert.equal(calls[0].action, action);
+    assert.deepEqual(calls[0].args, args);
+    assert.equal(result.receipt.status, '0x1');
+    assert.equal(storage.value, null);
+  }
+});
+
 test('explicit rejection preserves a journal after a confirmed approval', async () => {
   const storage = makeStorage();
   await assert.rejects(executeHousePurchase({ houseId: 2, account, config, ethereum: quoteProvider(), storage, locks,
@@ -198,15 +246,29 @@ test('reconciliation validates transaction target, calldata hash, and nonce befo
   const hash = `0x${'a'.repeat(64)}`;
   const journal = { account, status: 'actionBroadcast', hash, prepared: { chainId: 4663, account, target: config.contracts[0].address, dataHash: keccak256(data), nonce: 7 } };
   const storage = makeStorage(JSON.stringify(journal));
-  const ethereum = { request: async ({ method }) => ({ eth_chainId: '0x1237', eth_accounts: [account], eth_getTransactionReceipt: { status: '0x1' }, eth_getTransactionByHash: { hash, from: account, to: config.contracts[0].address, input: data, nonce: '0x7' } })[method] };
+  const ethereum = { request: async ({ method }) => ({ eth_chainId: '0x1237', eth_accounts: [account], eth_getTransactionReceipt: { status: 1 }, eth_getTransactionByHash: { hash, from: account, to: config.contracts[0].address, input: data, nonce: '0x7' } })[method] };
   let waited = false;
-  assert.deepEqual(await reconcileEconomyJournal({ ethereum, account, storage, locks, waitCanonical: async (_ethereum, waitedHash) => { waited = true; assert.equal(waitedHash, hash); return { status: '0x1' }; } }), { status: 'ACTION_CONFIRMED', hash });
+  assert.deepEqual(await reconcileEconomyJournal({ ethereum, account, storage, locks, waitCanonical: async (_ethereum, waitedHash) => { waited = true; assert.equal(waitedHash, hash); return { status: 1 }; } }), { status: 'ACTION_CONFIRMED', hash });
   assert.equal(waited, true);
   assert.equal(storage.value, null);
   const altered = makeStorage(JSON.stringify(journal));
   const badEthereum = { request: async ({ method }) => method === 'eth_chainId' ? '0x1237' : method === 'eth_accounts' ? [account] : method === 'eth_getTransactionReceipt' ? { status: '0x1' } : { hash, from: account, to: config.contracts[0].address, input: '0xbeef', nonce: '0x7' } };
   await assert.rejects(reconcileEconomyJournal({ ethereum: badEthereum, account, storage: altered, locks }), /TRANSACTION_IDENTITY_MISMATCH/);
   assert.notEqual(altered.value, null);
+});
+
+test('reconciliation returns authenticated seed evidence for the confirmation modal', async () => {
+  const hash = `0x${'f'.repeat(64)}`;
+  const data = '0x1234';
+  const eventInterface = new Interface(['event SeedPacksPurchased(address indexed buyer, bytes32 indexed ticker, uint32 packs, uint32 seeds, uint256 paid, uint256 rawStockCredit)']);
+  const event = eventInterface.encodeEventLog(eventInterface.getEvent('SeedPacksPurchased'), [account, encodeBytes32String('MSFT'), 1, 4, 100, 60]);
+  const journal = { type: 'SEED_PURCHASE', symbol: 'MSFT', totalPrice: '100', account, status: 'actionBroadcast', hash, actionPrepared: { chainId: 4663, account, target: config.contracts[0].address, dataHash: keccak256(data), nonce: 7 } };
+  const storage = makeStorage(JSON.stringify(journal));
+  const transaction = { hash, from: account, to: config.contracts[0].address, input: data, nonce: 7 };
+  const receipt = { status: 1, blockNumber: 112, logs: [{ address: config.contracts[0].address, ...event }] };
+  const ethereum = { request: async ({ method }) => ({ eth_chainId: '0x1237', eth_accounts: [account], eth_getTransactionReceipt: receipt, eth_getTransactionByHash: transaction })[method] };
+  assert.deepEqual(await reconcileEconomyJournal({ ethereum, account, storage, locks, waitCanonical: async () => receipt }), { status: 'ACTION_CONFIRMED', hash, symbol: 'MSFT', creditedSeeds: 4, receipt });
+  assert.equal(storage.value, null);
 });
 
 test('reconciliation distinguishes dropped and replaced actions without deleting confirmed approval authority', async () => {
@@ -243,6 +305,30 @@ test('reconciliation finds a mined replacement in the bounded prepared-block ran
     throw new Error(`unexpected ${method}`);
   } };
   assert.deepEqual(await reconcileEconomyJournal({ ethereum, account, storage, locks, waitCanonical: async () => ({ status: '0x1' }) }), { status: 'ACTION_CONFIRMED', hash: replacementHash });
+  assert.equal(storage.value, null);
+});
+
+test('reconciliation authenticates seed evidence before clearing a mined replacement', async () => {
+  const data = '0x1234';
+  const originalHash = `0x${'d'.repeat(64)}`;
+  const replacementHash = `0x${'e'.repeat(64)}`;
+  const prepared = { chainId: 4663, account, target: config.contracts[0].address, dataHash: keccak256(data), nonce: 7, preparedBlock: 8 };
+  const storage = makeStorage(JSON.stringify({ type: 'SEED_PURCHASE', symbol: 'MSFT', totalPrice: '100', account, status: 'actionBroadcast', hash: originalHash, actionPrepared: prepared }));
+  const receipt = { status: 1, blockNumber: 10, logs: [] };
+  const ethereum = { request: async ({ method, params }) => {
+    if (method === 'eth_chainId') return '0x1237';
+    if (method === 'eth_accounts') return [account];
+    if (method === 'eth_getTransactionReceipt') return params[0] === replacementHash ? receipt : null;
+    if (method === 'eth_getTransactionByHash') return params[0] === replacementHash ? { hash: replacementHash, from: account, to: prepared.target, input: data, nonce: 7 } : null;
+    if (method === 'eth_getTransactionCount') return '0x8';
+    if (method === 'eth_blockNumber') return '0xa';
+    if (method === 'eth_getBlockByNumber') return { transactions: params[0] === '0x9' ? [{ hash: replacementHash, from: account, to: prepared.target, input: data, nonce: 7 }] : [] };
+    throw new Error(`unexpected ${method}`);
+  } };
+  let authenticated = false;
+  const result = await reconcileEconomyJournal({ ethereum, account, storage, locks, waitCanonical: async () => receipt, authenticate: async ({ hash, journal }) => { authenticated = hash === replacementHash && journal.actionPrepared.target === prepared.target && journal.actionPrepared.nonce === prepared.nonce; return 4; } });
+  assert.equal(authenticated, true);
+  assert.deepEqual(result, { status: 'ACTION_CONFIRMED', hash: replacementHash, symbol: 'MSFT', creditedSeeds: 4, receipt });
   assert.equal(storage.value, null);
 });
 

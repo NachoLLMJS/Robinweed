@@ -110,6 +110,22 @@ test('receipt waiter rejects reverts and only resolves a canonical receipt after
   await assert.rejects(waitForSuccessfulReceipt({ request: async ({ method }) => method === 'eth_getTransactionReceipt' ? { status: '0x1', blockNumber: '0x64', blockHash, transactionHash: `0x${'f'.repeat(64)}` } : method === 'eth_blockNumber' ? '0x6f' : { hash: blockHash } }, `0x${'d'.repeat(64)}`, { pollMs: 1, timeoutMs: 50 }), /RECEIPT_IDENTITY_MISMATCH/);
 });
 
+test('canonical receipt waiter accepts safe numeric quantities returned by the injected wallet', async () => {
+  const transactionHash = `0x${'a'.repeat(64)}`;
+  const blockHash = `0x${'b'.repeat(64)}`;
+  const receipt = { status: 1, blockNumber: 62_334_816, blockHash, transactionHash };
+  const calls = [];
+  const ethereum = { request: async request => {
+    calls.push(request);
+    if (request.method === 'eth_getTransactionReceipt') return receipt;
+    if (request.method === 'eth_blockNumber') return 62_334_827;
+    if (request.method === 'eth_getBlockByNumber') return { hash: blockHash };
+    throw new Error(`unexpected ${request.method}`);
+  } };
+  assert.deepEqual(await waitForSuccessfulReceipt(ethereum, transactionHash, { pollMs: 1, timeoutMs: 50 }), receipt);
+  assert.equal(calls.find(call => call.method === 'eth_getBlockByNumber').params[0], `0x${receipt.blockNumber.toString(16)}`);
+});
+
 test('canonical receipt waiter confirms and authenticates a reverted receipt before returning it', async () => {
   const hash=`0x${'d'.repeat(64)}`,blockHash=`0x${'e'.repeat(64)}`,receipt={status:'0x0',transactionHash:hash,blockNumber:'0x64',blockHash};
   const ethereum={request:async({method})=>method==='eth_getTransactionReceipt'?receipt:method==='eth_blockNumber'?'0x6f':{hash:blockHash}};
