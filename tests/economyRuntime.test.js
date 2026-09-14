@@ -308,6 +308,34 @@ test('reconciliation finds a mined replacement in the bounded prepared-block ran
   assert.equal(storage.value, null);
 });
 
+test('reconciliation preserves a confirmed seed approval when its transaction was replaced', async () => {
+  const data = '0x095ea7b3';
+  const originalHash = `0x${'a'.repeat(64)}`;
+  const replacementHash = `0x${'b'.repeat(64)}`;
+  const prepared = { chainId: 4663, account, target: config.currency, dataHash: keccak256(data), nonce: 6, preparedBlock: 8 };
+  const storage = makeStorage(JSON.stringify({ type: 'SEED_PURCHASE', symbol: 'MSFT', totalPrice: '100', account, status: 'approvalBroadcast', approvalHash: originalHash, approvalPrepared: prepared }));
+  const receipt = { status: 1, blockNumber: 10, logs: [] };
+  const ethereum = { request: async ({ method, params }) => {
+    if (method === 'eth_chainId') return '0x1237';
+    if (method === 'eth_accounts') return [account];
+    if (method === 'eth_getTransactionReceipt') return params[0] === replacementHash ? receipt : null;
+    if (method === 'eth_getTransactionByHash') return null;
+    if (method === 'eth_getTransactionCount') return '0x7';
+    if (method === 'eth_blockNumber') return '0xa';
+    if (method === 'eth_getBlockByNumber') return { transactions: params[0] === '0x9' ? [{ hash: replacementHash, from: account, to: prepared.target, input: data, nonce: 6 }] : [] };
+    throw new Error(`unexpected ${method}`);
+  } };
+  let authenticateCalls = 0;
+  const result = await reconcileEconomyJournal({ ethereum, account, storage, locks, waitCanonical: async () => receipt, authenticate: async () => { authenticateCalls += 1; throw new Error('APPROVAL_MUST_NOT_AUTHENTICATE_SEED_EVENT'); } });
+  assert.deepEqual(result, { status: 'APPROVAL_CONFIRMED_RETRY_ACTION', hash: replacementHash });
+  assert.equal(authenticateCalls, 0);
+  const retained = JSON.parse(storage.value);
+  assert.equal(retained.approvalConfirmed, true);
+  assert.equal(retained.status, 'approvalConfirmed');
+  assert.equal('approvalHash' in retained, false);
+  assert.equal('approvalPrepared' in retained, false);
+});
+
 test('reconciliation authenticates seed evidence before clearing a mined replacement', async () => {
   const data = '0x1234';
   const originalHash = `0x${'d'.repeat(64)}`;

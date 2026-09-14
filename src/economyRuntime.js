@@ -317,8 +317,16 @@ export async function reconcileEconomyJournal({ ethereum, account, storage = loc
         normalizeReceiptStatus(replacementReceipt.status);
         const terminalReceipt=await waitCanonical(ethereum,replacement.hash);
         const terminalStatus=normalizeReceiptStatus(terminalReceipt.status);
+        if (isApprovalHash && terminalStatus === 1) {
+          journal.approvalConfirmed = true;
+          journal.status = 'approvalConfirmed';
+          delete journal.approvalHash;
+          delete journal.approvalPrepared;
+          storage.setItem(JOURNAL_KEY, JSON.stringify(journal));
+          return Object.freeze({ status: 'APPROVAL_CONFIRMED_RETRY_ACTION', hash: replacement.hash });
+        }
         let purchaseEvidence = {};
-        if (terminalStatus === 1 && journal.type === 'SEED_PURCHASE') {
+        if (isActionHash && terminalStatus === 1 && journal.type === 'SEED_PURCHASE') {
           if (!SYMBOLS.includes(journal.symbol) || !positiveDecimal(journal.totalPrice)) throw new Error('CORRUPT_ECONOMY_JOURNAL');
           const replacementJournal = { ...journal, actionPrepared: prepared };
           const creditedSeeds = await authenticate({ ethereum, receipt: terminalReceipt, hash: replacement.hash, journal: replacementJournal, account, symbol: journal.symbol, totalPrice: BigInt(journal.totalPrice) });
