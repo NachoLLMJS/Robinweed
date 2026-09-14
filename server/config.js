@@ -15,11 +15,13 @@ const requiredAbiMembers = Object.freeze({
   UniswapV3Adapter: Object.freeze({ events: [], functions: ['pathFor(address,address)'] }),
 });
 
-function validateActiveAbi(contract) {
+function validateActiveAbi(contract, wateringMode) {
   if (!Array.isArray(contract.abi) || contract.abi.length === 0) throw new Error('empty abi');
   const requirements = contract.name.startsWith('Vault_')
     ? { events: [['PackCredited(address,uint32,uint256)', 'buyer,seeds,rawAssets', '100'], ['SeedConsumed(address,bytes32,uint256)', 'buyer,positionId,rawAssets', '110']], functions: ['remainingSeeds(address)', 'unassignedCredit(address)'] }
-    : requiredAbiMembers[contract.name];
+    : contract.name === 'GameCore' && wateringMode === 'visual'
+      ? { ...requiredAbiMembers.GameCore, events: requiredAbiMembers.GameCore.events.filter(([event]) => !event.startsWith('PlantWatered(')) }
+      : requiredAbiMembers[contract.name];
   if (!requirements) return;
   const iface = new Interface(contract.abi);
   for (const [event, names, indexed] of requirements.events) {
@@ -47,6 +49,9 @@ const schema = z.object({
     try {
       const parsed = JSON.parse(value);
       if (parsed?.chainId !== 4663 || typeof parsed.economyActive !== 'boolean' || !Array.isArray(parsed.contracts) || parsed.contracts.length > 20) throw new Error('invalid manifest');
+      const wateringMode = parsed.wateringMode ?? 'onchain';
+      if (!['onchain', 'visual'].includes(wateringMode)) throw new Error('invalid watering mode');
+      parsed.wateringMode = wateringMode;
       const names = new Set();
       const addresses = new Set();
       for (const contract of parsed.contracts) {
@@ -56,7 +61,7 @@ const schema = z.object({
       if (parsed.economyActive) {
         if (!/^0x[0-9a-fA-F]{40}$/.test(parsed.currency ?? '')) throw new Error('invalid currency');
         for (const name of ['EconomyRouter','GameCore','UniswapV3Adapter','Vault_AAPL','Vault_GOOGL','Vault_MSFT','Vault_MSTR','Vault_NVDA','Vault_QQQ','Vault_TSLA']) if (!names.has(name)) throw new Error('missing active contract');
-        for (const contract of parsed.contracts) validateActiveAbi(contract);
+        for (const contract of parsed.contracts) validateActiveAbi(contract, wateringMode);
         const supported=['AAPL','GOOGL','MSFT','MSTR','NVDA','QQQ','TSLA'];
         if(!Array.isArray(parsed.houseBasketSymbols)||parsed.houseBasketSymbols.length!==7||[...parsed.houseBasketSymbols].sort().join(',')!==supported.join(','))throw new Error('invalid public house basket');
       }
@@ -96,6 +101,7 @@ export function loadBackendConfig(environment = process.env) {
     publicConfig: Object.freeze({
       chainId: 4663,
       economyActive: value.CONTRACT_MANIFEST_JSON.economyActive === true,
+      wateringMode: value.CONTRACT_MANIFEST_JSON.wateringMode,
       currency: value.CONTRACT_MANIFEST_JSON.currency ?? null,
       houseBasketSymbols: value.CONTRACT_MANIFEST_JSON.houseBasketSymbols ?? [],
       contracts: value.CONTRACT_MANIFEST_JSON.contracts.map(({ name, address }) => ({ name, address })),

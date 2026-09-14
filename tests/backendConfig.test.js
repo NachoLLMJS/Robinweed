@@ -24,6 +24,16 @@ test('backend config accepts only complete Robinhood Chain Mainnet production se
   assert.equal(config.port, 3000);
   assert.equal(config.publicOrigin, 'https://stockdealer.example');
   assert.equal(config.rpcQuote, 'https://rpc.mainnet.chain.robinhood.com');
+  assert.equal(config.publicConfig.wateringMode, 'onchain');
+});
+
+test('backend exposes visual watering only when explicitly declared', () => {
+  const manifest = JSON.parse(valid.CONTRACT_MANIFEST_JSON);
+  manifest.wateringMode = 'visual';
+  const config = loadBackendConfig({ ...valid, CONTRACT_MANIFEST_JSON: JSON.stringify(manifest) });
+  assert.equal(config.publicConfig.wateringMode, 'visual');
+  manifest.wateringMode = 'unknown';
+  assert.throws(() => loadBackendConfig({ ...valid, CONTRACT_MANIFEST_JSON: JSON.stringify(manifest) }));
 });
 
 test('backend loads the versioned mainnet manifest from a repository path instead of a giant environment value', () => {
@@ -33,9 +43,13 @@ test('backend loads the versioned mainnet manifest from a repository path instea
     CONTRACT_MANIFEST_PATH: 'config/mainnet-contract-manifest.json',
     INDEXER_START_BLOCK: '62100770',
   });
-  assert.equal(config.contractManifest.contracts.length, 10);
-  assert.equal(config.contractManifest.economyActive, true);
-  assert.equal(config.contractManifest.currency, '0x8998706EbF337575f05F294036eBfc3D1dE01290');
+  assert.equal(config.contractManifest.contracts.length, 11);
+  assert.equal(config.contractManifest.economyActive, false);
+  assert.equal(config.contractManifest.wateringMode, 'visual');
+  assert.equal(config.contractManifest.currency, null);
+  assert.ok(config.contractManifest.contracts.every(entry => entry.abiVersion === '4-auto-growth-pons'));
+  assert.ok(config.contractManifest.contracts.every(entry => entry.address.toLowerCase() !== '0x4e7db3f33e495d4932bd5460b25ca36db0d403c5'));
+  assert.ok(config.contractManifest.contracts.every(entry => entry.address.toLowerCase() !== '0x8998706ebf337575f05f294036ebfc3d1de01290'));
 });
 
 test('backend config fails closed for wrong chain, insecure origin, weak secret, or deployer keys', () => {
@@ -69,5 +83,8 @@ test('active manifests reject empty or semantically incomplete ABIs', () => {
   const vaultAbi = ['event PackCredited(address indexed buyer,uint32 seeds,uint256 rawAssets)', 'event SeedConsumed(address indexed buyer,bytes32 indexed positionId,uint256 rawAssets)', 'function remainingSeeds(address) view returns(uint256)', 'function unassignedCredit(address) view returns(uint256)'];
   manifest.contracts = manifest.contracts.map(entry => ({ ...entry, abi: entry.name === 'GameCore' ? gameAbi : entry.name === 'EconomyRouter' ? ['function currency() view returns(address)', 'function routes(bytes32) view returns(address,address,address,bool)'] : entry.name === 'UniswapV3Adapter' ? ['function pathFor(address,address) view returns(bytes)'] : vaultAbi }));
   assert.equal(loadBackendConfig({ ...valid, CONTRACT_MANIFEST_JSON: JSON.stringify(manifest) }).contractManifest.economyActive, true);
+  manifest.wateringMode = 'visual';
+  manifest.contracts = manifest.contracts.map(entry => entry.name === 'GameCore' ? { ...entry, abi: entry.abi.filter(member => !String(member).includes('PlantWatered')) } : entry);
+  assert.equal(loadBackendConfig({ ...valid, CONTRACT_MANIFEST_JSON: JSON.stringify(manifest) }).publicConfig.wateringMode, 'visual');
   assert.throws(() => loadBackendConfig({ ...valid, INDEXER_START_BLOCK: '2', CONTRACT_MANIFEST_JSON: JSON.stringify(manifest) }));
 });

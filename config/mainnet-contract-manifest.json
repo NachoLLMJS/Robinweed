@@ -1,7 +1,8 @@
 {
   "chainId": 4663,
-  "economyActive": true,
-  "currency": "0x8998706EbF337575f05F294036eBfc3D1dE01290",
+  "economyActive": false,
+  "wateringMode": "visual",
+  "currency": null,
   "houseBasketSymbols": [
     "AAPL",
     "GOOGL",
@@ -13,11 +14,576 @@
   ],
   "contracts": [
     {
+      "name": "FoundationController",
+      "address": "0xB603C9536cBC772Abcf8A23d53e3B98c9539D758",
+      "deploymentBlock": 62750973,
+      "expectedCodeHash": "0x4d80c7c2453358a775c1b7d8f0302008b27ee1b0b4aff29dc2eff0454233cd68",
+      "abiVersion": "4-auto-growth-pons",
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "initialOwner",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "ponsFactory_",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "name": "EconomyAlreadyActivated",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "FoundationAlreadyConfigured",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "FoundationNotConfigured",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "InvalidConfiguration",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "InvalidContract",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "InvalidPonsLaunch",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "InvalidRoute",
+          "type": "error"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnableInvalidOwner",
+          "type": "error"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "OwnableUnauthorizedAccount",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "ReentrancyGuardReentrantCall",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "WrongChain",
+          "type": "error"
+        },
+        {
+          "anonymous": false,
+          "inputs": [],
+          "name": "EconomyPaused",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [],
+          "name": "EconomyResumed",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "economyRouter",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "ponsAdapter",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "gameCore",
+              "type": "address"
+            }
+          ],
+          "name": "FoundationConfigured",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferStarted",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "token",
+              "type": "address"
+            }
+          ],
+          "name": "StockdealerEconomyActivated",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "REQUIRED_HOUSES",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "REQUIRED_TICKERS",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "ROBINHOOD_MAINNET_CHAIN_ID",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "acceptOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "components": [
+                {
+                  "internalType": "address",
+                  "name": "token",
+                  "type": "address"
+                },
+                {
+                  "internalType": "bytes[]",
+                  "name": "routeData",
+                  "type": "bytes[]"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "seedPackPrice",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint32",
+                  "name": "seedsPerPack",
+                  "type": "uint32"
+                },
+                {
+                  "internalType": "uint16[]",
+                  "name": "basketWeightsBps",
+                  "type": "uint16[]"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint32",
+                      "name": "houseId",
+                      "type": "uint32"
+                    },
+                    {
+                      "internalType": "uint256",
+                      "name": "price",
+                      "type": "uint256"
+                    },
+                    {
+                      "internalType": "uint8",
+                      "name": "capacity",
+                      "type": "uint8"
+                    }
+                  ],
+                  "internalType": "struct StockdealerFoundationControllerV4.HouseConfig[]",
+                  "name": "houses",
+                  "type": "tuple[]"
+                }
+              ],
+              "internalType": "struct StockdealerFoundationControllerV4.ActivationConfig",
+              "name": "config",
+              "type": "tuple"
+            }
+          ],
+          "name": "activateStockdealerEconomy",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "activated",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "router",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "adapter",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "core",
+              "type": "address"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "tickers",
+              "type": "bytes32[]"
+            },
+            {
+              "internalType": "address[]",
+              "name": "rewardTokens",
+              "type": "address[]"
+            },
+            {
+              "internalType": "address[]",
+              "name": "vaults",
+              "type": "address[]"
+            }
+          ],
+          "name": "configureFoundation",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "economyRouter",
+          "outputs": [
+            {
+              "internalType": "contract IFoundationRouterV4",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "foundationConfigured",
+          "outputs": [
+            {
+              "internalType": "bool",
+              "name": "",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "gameCore",
+          "outputs": [
+            {
+              "internalType": "contract IFoundationCoreV4",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "owner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "pauseEconomy",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "pendingOwner",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "ponsAdapter",
+          "outputs": [
+            {
+              "internalType": "contract IFoundationAdapterV4",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "ponsFactory",
+          "outputs": [
+            {
+              "internalType": "contract IPonsFactoryV4",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "tickerIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "recoverVaultSurplus",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "renounceOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "resumeEconomy",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "stockdealerToken",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "index",
+              "type": "uint256"
+            }
+          ],
+          "name": "tickerAt",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "ticker",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "address",
+              "name": "rewardToken",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "rewardVault",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "tickerCount",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "transferOwnership",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "tickerIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address",
+              "name": "recipient",
+              "type": "address"
+            },
+            {
+              "internalType": "uint256",
+              "name": "amount",
+              "type": "uint256"
+            }
+          ],
+          "name": "withdrawProtocolReserve",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ]
+    },
+    {
       "name": "EconomyRouter",
-      "address": "0x940507b21f3692a0164E1f0200846Ea176F659fC",
-      "deploymentBlock": 62237999,
+      "address": "0xc773249952CF3782CAceFE0063B0A43bF371f35E",
+      "deploymentBlock": 62750973,
       "expectedCodeHash": "0xc0ffe2eba3eb7c808fba7167980e93e5da26ccd8e9bb61b74d8ef981c029cca1",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -687,10 +1253,10 @@
     },
     {
       "name": "UniswapV3Adapter",
-      "address": "0xB4f283161FE53467212244A6B3FDB721Bc421Bf6",
-      "deploymentBlock": 62238102,
-      "expectedCodeHash": "0x49d1426d50c7e71616ba6fa6d54d78391662bd7fc92bdb0c9ab3c8cdba516998",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "address": "0xbA78B5bcdaC9ce0676ceb64d4DBeF6A03e643B39",
+      "deploymentBlock": 62750973,
+      "expectedCodeHash": "0x72307c7214ae4441718f58b345ea59dd6efb083a9a9e81fb026761057344e6d3",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -703,10 +1269,45 @@
               "internalType": "address",
               "name": "economyRouter_",
               "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "ponsFactory_",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "universalRouter_",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "permit2_",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "v3Router_",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "v3Factory_",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "weth_",
+              "type": "address"
             }
           ],
           "stateMutability": "nonpayable",
           "type": "constructor"
+        },
+        {
+          "inputs": [],
+          "name": "AmountTooLarge",
+          "type": "error"
         },
         {
           "inputs": [],
@@ -716,16 +1317,6 @@
         {
           "inputs": [],
           "name": "ConfigurationNotFrozen",
-          "type": "error"
-        },
-        {
-          "inputs": [],
-          "name": "CurveGraduated",
-          "type": "error"
-        },
-        {
-          "inputs": [],
-          "name": "CurveNotGraduated",
           "type": "error"
         },
         {
@@ -746,6 +1337,11 @@
         {
           "inputs": [],
           "name": "InvalidPath",
+          "type": "error"
+        },
+        {
+          "inputs": [],
+          "name": "LaunchRescued",
           "type": "error"
         },
         {
@@ -813,25 +1409,6 @@
             {
               "indexed": true,
               "internalType": "address",
-              "name": "tokenIn",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "tokenOut",
-              "type": "address"
-            }
-          ],
-          "name": "GraduatedPathActivated",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
               "name": "previousOwner",
               "type": "address"
             },
@@ -891,32 +1468,6 @@
         },
         {
           "inputs": [],
-          "name": "OFFICIAL_SWAP_ROUTER_02",
-          "outputs": [
-            {
-              "internalType": "address",
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [],
-          "name": "OFFICIAL_V3_FACTORY",
-          "outputs": [
-            {
-              "internalType": "address",
-              "name": "",
-              "type": "address"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [],
           "name": "ROBINHOOD_MAINNET_CHAIN_ID",
           "outputs": [
             {
@@ -931,29 +1482,6 @@
         {
           "inputs": [],
           "name": "acceptOwnership",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "tokenIn",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "tokenOut",
-              "type": "address"
-            },
-            {
-              "internalType": "bytes",
-              "name": "graduatedPath",
-              "type": "bytes"
-            }
-          ],
-          "name": "activateGraduatedPath",
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
@@ -1015,43 +1543,13 @@
           "type": "function"
         },
         {
-          "inputs": [
-            {
-              "internalType": "bytes32",
-              "name": "pair",
-              "type": "bytes32"
-            }
-          ],
-          "name": "graduatedPathActive",
+          "inputs": [],
+          "name": "nativeBalance",
           "outputs": [
             {
-              "internalType": "bool",
-              "name": "active",
-              "type": "bool"
-            }
-          ],
-          "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "address",
-              "name": "tokenIn",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "tokenOut",
-              "type": "address"
-            }
-          ],
-          "name": "graduatedPathFor",
-          "outputs": [
-            {
-              "internalType": "bytes",
+              "internalType": "uint256",
               "name": "",
-              "type": "bytes"
+              "type": "uint256"
             }
           ],
           "stateMutability": "view",
@@ -1100,6 +1598,32 @@
           "outputs": [
             {
               "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "permit2",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "ponsFactory",
+          "outputs": [
+            {
+              "internalType": "contract IPonsLifecycleFactoryV4",
               "name": "",
               "type": "address"
             }
@@ -1170,15 +1694,71 @@
           "outputs": [],
           "stateMutability": "nonpayable",
           "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "universalRouter",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "v3Factory",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "v3Router",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "weth",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "stateMutability": "payable",
+          "type": "receive"
         }
       ]
     },
     {
       "name": "Vault_AAPL",
-      "address": "0x3CfAAED1ee054ce3726afEeCA7C251a3F1a4f34D",
-      "deploymentBlock": 62238203,
+      "address": "0x5e62C392A574053B0EdFF9E73525D3263E35E936",
+      "deploymentBlock": 62750973,
       "expectedCodeHash": "0x53fe465089ed8e3d2e541a57dfb8a48833d76adf15808c155ed197d7a51e714e",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -1786,10 +2366,10 @@
     },
     {
       "name": "Vault_GOOGL",
-      "address": "0x807a34DA8AEe9C76B396BEf752691467834A3c64",
-      "deploymentBlock": 62238305,
+      "address": "0x9F0691a03766C3753B4eff64c565039C53713135",
+      "deploymentBlock": 62750973,
       "expectedCodeHash": "0xc4fc2944e485d5effd2df2e4e88c3cf95de7f2fd46925bde2670725b7deec88e",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -2397,10 +2977,10 @@
     },
     {
       "name": "Vault_MSFT",
-      "address": "0x574d06b2E54738Ca46970050B515eD432f97c854",
-      "deploymentBlock": 62238407,
+      "address": "0x6B79079d519765E5F58cB03926445448DAA30d3d",
+      "deploymentBlock": 62750973,
       "expectedCodeHash": "0x47de16d25fe4eee8c6d88afe48e743294b9744385735d07fe3a51893bc54a102",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -3008,10 +3588,10 @@
     },
     {
       "name": "Vault_MSTR",
-      "address": "0xf308711E83622718DEB1ba9D6539F074b1FFA018",
-      "deploymentBlock": 62238509,
+      "address": "0x18aAB5Bc9a8aE98CbD2BAeEa9971D5c75acE2e2e",
+      "deploymentBlock": 62750973,
       "expectedCodeHash": "0x7a55e5d649aee154040632fe6bc5b80d0551c19b11d7c37edac9741756961fe3",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -3619,10 +4199,10 @@
     },
     {
       "name": "Vault_NVDA",
-      "address": "0xbCD9C2a07936a5929dceC5486076B7eCeEcA1B5a",
-      "deploymentBlock": 62238611,
+      "address": "0xc52EBe0C7A4761A3Bb2f3C592a1B9cf7cE92Ea78",
+      "deploymentBlock": 62750973,
       "expectedCodeHash": "0x60b41dee6c6b58af5fdfb81e8501ace1ae287e3ce884237f7b4a227e1aee5fc4",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -4230,10 +4810,10 @@
     },
     {
       "name": "Vault_QQQ",
-      "address": "0xeE0Fa83A41A1405484c12AAD12c25f987e3096e3",
-      "deploymentBlock": 62238714,
+      "address": "0x9D33Ef8Bb1BCc49b94a4a59057496554776F2375",
+      "deploymentBlock": 62750973,
       "expectedCodeHash": "0x6d257e5a0c3fcb989949316018a88e52c813a32f3da92bd8514821f9c387c424",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -4841,10 +5421,10 @@
     },
     {
       "name": "Vault_TSLA",
-      "address": "0x57F3305A31A9745b806F9Ef17B0AfDC6945C431E",
-      "deploymentBlock": 62238816,
+      "address": "0xfb23e767DA1028C7f826A3a996fA236A8b998508",
+      "deploymentBlock": 62750973,
       "expectedCodeHash": "0x8784b933b96c38209f30ac90570c9fcc5e45875a2a28259c1aafcfcdb2b004a7",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -5452,10 +6032,10 @@
     },
     {
       "name": "GameCore",
-      "address": "0x4E7db3F33E495D4932bD5460B25Ca36dB0D403C5",
-      "deploymentBlock": 62238918,
-      "expectedCodeHash": "0x80741c2e9f5ffa1d246a816f282d64d2ff5ad9bd4472bc920f4418c35c26558f",
-      "abiVersion": "3-default-warehouse-pons-trial",
+      "address": "0x64197c37A98cfCA6d39a48E02029F75f407E68f8",
+      "deploymentBlock": 62750973,
+      "expectedCodeHash": "0xbea0cb11e93e01e586e0b4953464a2e2a7de9305fab140ece5b003328c72f95a",
+      "abiVersion": "4-auto-growth-pons",
       "abi": [
         {
           "inputs": [
@@ -5472,11 +6052,6 @@
           ],
           "stateMutability": "nonpayable",
           "type": "constructor"
-        },
-        {
-          "inputs": [],
-          "name": "AlreadyWatered",
-          "type": "error"
         },
         {
           "inputs": [],
@@ -5766,37 +6341,6 @@
         },
         {
           "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "owner",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "uint32",
-              "name": "houseId",
-              "type": "uint32"
-            },
-            {
-              "indexed": true,
-              "internalType": "uint8",
-              "name": "plotId",
-              "type": "uint8"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint64",
-              "name": "wateredAt",
-              "type": "uint64"
-            }
-          ],
-          "name": "PlantWatered",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
           "inputs": [],
           "name": "PurchasesEnabled",
           "type": "event"
@@ -5947,31 +6491,6 @@
             }
           ],
           "name": "WarehouseHarvestClaimed",
-          "type": "event"
-        },
-        {
-          "anonymous": false,
-          "inputs": [
-            {
-              "indexed": true,
-              "internalType": "address",
-              "name": "owner",
-              "type": "address"
-            },
-            {
-              "indexed": true,
-              "internalType": "uint8",
-              "name": "plotId",
-              "type": "uint8"
-            },
-            {
-              "indexed": false,
-              "internalType": "uint64",
-              "name": "wateredAt",
-              "type": "uint64"
-            }
-          ],
-          "name": "WarehousePlantWatered",
           "type": "event"
         },
         {
@@ -6712,37 +7231,6 @@
             }
           ],
           "stateMutability": "view",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint32",
-              "name": "houseId",
-              "type": "uint32"
-            },
-            {
-              "internalType": "uint8",
-              "name": "plotId",
-              "type": "uint8"
-            }
-          ],
-          "name": "water",
-          "outputs": [],
-          "stateMutability": "nonpayable",
-          "type": "function"
-        },
-        {
-          "inputs": [
-            {
-              "internalType": "uint8",
-              "name": "plotId",
-              "type": "uint8"
-            }
-          ],
-          "name": "waterWarehouse",
-          "outputs": [],
-          "stateMutability": "nonpayable",
           "type": "function"
         }
       ]

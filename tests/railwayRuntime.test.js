@@ -52,8 +52,8 @@ test('Railway realtime publishes every 50ms simulation tick instead of dropping 
   assert.doesNotMatch(server, /serverSeq\s*%\s*2/);
 });
 
-test('Railway has an explicit private indexer service command', () => {
+test('Railway has an explicit private indexer service command and migrates first', () => {
   assert.equal(packageJson.scripts['start:indexer'], 'node server/indexer.js');
-  assert.match(railwayIndexer, /startCommand = "npm run start:indexer"/);
+  assert.match(railwayIndexer, /startCommand = "npm run db:migrate && npm run start:indexer"/);
   assert.doesNotMatch(railwayIndexer, /healthcheckPath|domain|public/i);
 });

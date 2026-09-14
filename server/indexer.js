@@ -24,6 +24,11 @@ const byAddress = new Map(contracts.map(entry => [entry.key, entry]));
 if (byAddress.size !== contracts.length) throw new Error('DUPLICATE_CONTRACT_ADDRESS');
 const allowlist = new Set(byAddress.keys());
 const bytes = hex => Buffer.from(hex.slice(2), 'hex');
+const gameCoreEntries = contracts.filter(entry => entry.name === 'GameCore');
+if (gameCoreEntries.length !== 1) throw new Error('EXACTLY_ONE_GAME_CORE_REQUIRED');
+const foundationId = bytes(gameCoreEntries[0].address);
+const workerName = `main:${gameCoreEntries[0].address.toLowerCase()}`;
+const earliestDeploymentBlock = Math.min(...contracts.map(entry => entry.deploymentBlock));
 const sameHex = (left, right) => left?.toLowerCase() === right?.toLowerCase();
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
@@ -107,29 +112,29 @@ async function ingestRange(client, fromBlock, toBlock, expectedParentHash) {
       [log.blockNumber, bytes(log.blockHash), bytes(log.transactionHash), log.index, bytes(log.address), parsed.name, serializeEventPayload(parsed.args.toObject())],
     );
     const applied = await client.query(
-      `INSERT INTO applied_events (chain_id,tx_hash,log_index,reducer_version) VALUES (4663,$1,$2,1)
+      `INSERT INTO applied_events (chain_id,foundation_id,tx_hash,log_index,reducer_version) VALUES (4663,$1,$2,$3,1)
        ON CONFLICT DO NOTHING RETURNING log_index`,
-      [bytes(log.transactionHash), log.index],
+      [foundationId, bytes(log.transactionHash), log.index],
     );
     if (applied.rowCount === 1) await applyProjectionOperations(client, projectionOperations({
       contractName: entry.name,
       eventName: parsed.name,
       args: parsed.args.toObject(),
-      meta: { blockNumber: log.blockNumber, blockTime: new Date(block.timestamp * 1000), transactionHash: log.transactionHash, logIndex: log.index },
+      meta: { blockNumber: log.blockNumber, blockTime: new Date(block.timestamp * 1000), transactionHash: log.transactionHash, logIndex: log.index, foundationId, wateringMode: config.contractManifest.wateringMode },
     }));
   }
   const checkpointBlock = blocks.at(-1);
   await client.query(
     `INSERT INTO indexer_checkpoints (chain_id,worker_name,scanned_block,scanned_hash,finalized_block,finalized_hash)
-     VALUES (4663,'main',$1,$2,$1,$2)
-     ON CONFLICT (chain_id,worker_name) DO UPDATE SET scanned_block=$1,scanned_hash=$2,finalized_block=$1,finalized_hash=$2,updated_at=now()`,
-    [toBlock, bytes(checkpointBlock.hash)],
+     VALUES (4663,$1,$2,$3,$2,$3)
+     ON CONFLICT (chain_id,worker_name) DO UPDATE SET scanned_block=$2,scanned_hash=$3,finalized_block=$2,finalized_hash=$3,updated_at=now()`,
+    [workerName, toBlock, bytes(checkpointBlock.hash)],
   );
   return checkpointBlock.hash;
 }
 
 async function validatedCheckpoint(client, finalized) {
-  const result = await client.query("SELECT finalized_block,finalized_hash FROM indexer_checkpoints WHERE chain_id=4663 AND worker_name='main' FOR UPDATE");
+  const result = await client.query('SELECT finalized_block,finalized_hash FROM indexer_checkpoints WHERE chain_id=4663 AND worker_name=$1 FOR UPDATE', [workerName]);
   if (!result.rows[0]) return null;
   const number = Number(result.rows[0].finalized_block);
   const storedHash = `0x${result.rows[0].finalized_hash.toString('hex')}`;
@@ -157,7 +162,7 @@ async function run() {
       const finalized = await corroboratedFinalizedHead(primary, secondary);
       await verifyManifest(finalized.number);
       let checkpoint = await validatedCheckpoint(lockClient, finalized);
-      let fromBlock = checkpoint ? checkpoint.number + 1 : config.indexerStartBlock;
+      let fromBlock = checkpoint ? checkpoint.number + 1 : Math.max(config.indexerStartBlock, earliestDeploymentBlock);
       let parentHash = checkpoint?.hash ?? null;
       if (!parentHash && fromBlock > 0) {
         const parents = await corroboratedBlocks(fromBlock - 1, fromBlock - 1, null);

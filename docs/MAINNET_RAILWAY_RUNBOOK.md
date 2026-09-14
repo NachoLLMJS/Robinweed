@@ -74,12 +74,16 @@ must identify a deployed Safe rather than an EOA:
 - `ADMIN_SAFE_MODULES`: exact comma-separated enabled-module set, or an empty value when none are permitted;
 - `ADMIN_SAFE_GUARD_STORAGE_SLOT`: must equal the canonical Safe guard slot `0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c7`; configurable alternative slots are rejected;
 - `ADMIN_SAFE_GUARD_ADDRESS`: exact guard address, or the zero address when no guard is permitted.
+- `ADMIN_SAFE_MULTISEND_ADDRESS` and `ADMIN_SAFE_MULTISEND_CODE_HASH`: exact public MultiSend contract and runtime hash selected by Safe Transaction Builder for the submitted batch. The V4 postdeploy verifier decodes `execTransaction` and this `multiSend(bytes)` payload byte-for-byte.
 
 The scripts read `getOwners()`, `getThreshold()` and `nonce()` and fail closed
 if code, interface, runtime hash, owners or threshold differ. A target-call
 sequence simulation is not represented as a full Safe execution simulation.
 Before signing, the final Safe transaction must separately be dry-run with its
 real Safe nonce, MultiSend wrapper, signatures, guard and module configuration.
+After execution, `mainnet:verify:v4` requires the canonical transaction hash,
+recomputes its Safe transaction hash at the committed nonce, and rejects any
+inner target, value, calldata, operation or MultiSend runtime mismatch.
 
 ## Pons graduation transition
 

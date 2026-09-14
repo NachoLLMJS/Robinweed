@@ -6,6 +6,7 @@ const TOKEN_AMOUNT = /^(?:0|[1-9]\d*)(?:\.\d+)?$/;
 const V3_PATH = /^0x(?:[0-9a-fA-F]{2}){43,}$/;
 const coder = AbiCoder.defaultAbiCoder();
 const FLYCO_TRIAL_TOKEN = '0x8998706EbF337575f05F294036eBfc3D1dE01290';
+const ROBINHOOD_WETH = '0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73';
 
 export function validatePonsActivationConfig(config) {
   if (!config || config.chainId !== 4663) throw new Error('WRONG_CHAIN');
@@ -39,7 +40,7 @@ export function validatePonsActivationConfig(config) {
       } else {
         if (!V3_PATH.test(downstreamPath) || (downstreamPath.length - 2 - 40) % 46 !== 0) throw new Error('BAD_DOWNSTREAM_PATH');
         const first=getAddress(`0x${normalizedPath.slice(2,42)}`),last=getAddress(`0x${normalizedPath.slice(-40)}`);
-        if(first!==pair||last!==target)throw new Error('PATH_ENDPOINT_MISMATCH');
+        if(first!==(pair === '0x0000000000000000000000000000000000000000' ? ROBINHOOD_WETH : pair)||last!==target)throw new Error('PATH_ENDPOINT_MISMATCH');
       }
       routes[symbol] = Object.freeze({ curve: getAddress(curve), pairToken: getAddress(pairToken), downstreamPath });
     } catch { throw new Error(`INVALID_PONS_ROUTE:${symbol}`); }

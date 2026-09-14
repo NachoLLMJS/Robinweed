@@ -1,0 +1,131 @@
+{
+  "version": 4,
+  "chainId": 4663,
+  "status": "UNSIGNED_SAFE_BATCH_SIMULATED",
+  "planDigest": "0x5b853cdf949bad337b6957c84e9dd9796c4e074cefa7badd3b03fdb481ea5bf4",
+  "baseDigest": "0xa9edfba4184a6d94f14160fa367f2410eb74532060c5788479019f69bc71eec2",
+  "safe": {
+    "address": "0xA5fFD738A6d0fE8642eDc2762555Aaf1e2a48F8F",
+    "codeHash": "0xd7d408ebcd99b2b70be43e20253d6d92a8ea8fab29bd3be7f55b10032331fb4c",
+    "singleton": "0x41675C099F32341bf84BFc5382aF534df5C7461a",
+    "singletonCodeHash": "0x1fe2df852ba3299d6534ef416eefa406e56ced995bca886ab7a553e6d0c5e1c4",
+    "factory": "0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67",
+    "factoryCodeHash": "0x50c3cdc4074750a7a974204a716c999edd37482f907608d960b2b025ee0b3317",
+    "deploymentTxHash": "0x8fd727ce931163d87881b6428353059cf9630606b8808abb645b48ed0c5f7fb4",
+    "version": "1.4.1",
+    "owners": [
+      "0x53109fe9A2DE96E6bC0b681713BaE6BE2B78765F"
+    ],
+    "threshold": 1,
+    "modules": [],
+    "guard": "0x0000000000000000000000000000000000000000",
+    "nonce": "132",
+    "multiSend": {
+      "address": "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+      "codeHash": "0xa9865ac2d9c7a1591619b188c4d88167b50df6cc0c5327fcbd1c8c75f7c066ad"
+    }
+  },
+  "pinnedBlock": {
+    "number": 62466767,
+    "hash": "0xdcef7f1e22e7040c26195c77983599e7195153c5c5a86888d8ca2d9d6156ea1c"
+  },
+  "create2Proxy": {
+    "address": "0x4e59b44847b379578588920cA78FbF26c0B4956C",
+    "codeHash": "0x2fa86add0aed31f33a762c9d88e807c475bd51d0f52bd0955754b2608f7e4989"
+  },
+  "contracts": {
+    "FoundationController": "0xB603C9536cBC772Abcf8A23d53e3B98c9539D758",
+    "EconomyRouter": "0xc773249952CF3782CAceFE0063B0A43bF371f35E",
+    "PonsAdapter": "0xbA78B5bcdaC9ce0676ceb64d4DBeF6A03e643B39",
+    "Vault_AAPL": "0x5e62C392A574053B0EdFF9E73525D3263E35E936",
+    "Vault_GOOGL": "0x9F0691a03766C3753B4eff64c565039C53713135",
+    "Vault_MSFT": "0x6B79079d519765E5F58cB03926445448DAA30d3d",
+    "Vault_MSTR": "0x18aAB5Bc9a8aE98CbD2BAeEa9971D5c75acE2e2e",
+    "Vault_NVDA": "0xc52EBe0C7A4761A3Bb2f3C592a1B9cf7cE92Ea78",
+    "Vault_QQQ": "0x9D33Ef8Bb1BCc49b94a4a59057496554776F2375",
+    "Vault_TSLA": "0xfb23e767DA1028C7f826A3a996fA236A8b998508",
+    "GameCore": "0x64197c37A98cfCA6d39a48E02029F75f407E68f8"
+  },
+  "deployments": [
+    {
+      "label": "FoundationController",
+      "address": "0xB603C9536cBC772Abcf8A23d53e3B98c9539D758",
+      "salt": "0xc2a4fbcc049f98c698f8192d52e670a1c81a81d6659e457c95f5a13440ad48d8",
+      "initCodeHash": "0x93f609ddc358b04265e6567439a560c6110977b13908ff4d71db1cad659b1508",
+      "artifact": "StockdealerFoundationControllerV4"
+    },
+    {
+      "label": "EconomyRouter",
+      "address": "0xc773249952CF3782CAceFE0063B0A43bF371f35E",
+      "salt": "0x26f93d9ee7cfd2f96825d81ba3f8c06d03ae33bce58cd8cfb3016e3b568a3af8",
+      "initCodeHash": "0x39956bf67659ae0d6cb98cbcbcee21d3732a91bf13c35f0172ae18a03e879e78",
+      "artifact": "StockdealerEconomyRouter"
+    },
+    {
+      "label": "PonsAdapter",
+      "address": "0xbA78B5bcdaC9ce0676ceb64d4DBeF6A03e643B39",
+      "salt": "0x71434bc6f7553e77d6e99bce3617be31928abe7afa2bdc8ae327083887cc067e",
+      "initCodeHash": "0x99b0b313eba2c76554b1e556e17b13053a204ce05d069fd8b803e0c46656e81a",
+      "artifact": "StockdealerPonsLifecycleAdapterV4"
+    },
+    {
+      "label": "Vault_AAPL",
+      "address": "0x5e62C392A574053B0EdFF9E73525D3263E35E936",
+      "salt": "0x85713711540321f15a52bf163156938fdf9a62905e7f300fb75d133185b4ee7e",
+      "initCodeHash": "0x2d8b5a6d018c986018f636ea95496d1660516f64c1c7505fe1aecc9fa027d10f",
+      "artifact": "StockdealerRewardVault"
+    },
+    {
+      "label": "Vault_GOOGL",
+      "address": "0x9F0691a03766C3753B4eff64c565039C53713135",
+      "salt": "0x01648665e3a353cfc8e27b0eb28055c193715dc570e6fbb7ea23628e1a356a17",
+      "initCodeHash": "0x69dbf7ab2dfc600017d9e73a222c0c87026e9669608e4f23c4f02eae6e71dbc2",
+      "artifact": "StockdealerRewardVault"
+    },
+    {
+      "label": "Vault_MSFT",
+      "address": "0x6B79079d519765E5F58cB03926445448DAA30d3d",
+      "salt": "0xf361c6e3def20b13a7dcaca3560fadd1a034453d4742190b0802f5c5439f757a",
+      "initCodeHash": "0x27eb35cc9bff171ad528daf533ea40f5188870b85777bf8c25fa4955cc274efc",
+      "artifact": "StockdealerRewardVault"
+    },
+    {
+      "label": "Vault_MSTR",
+      "address": "0x18aAB5Bc9a8aE98CbD2BAeEa9971D5c75acE2e2e",
+      "salt": "0x495c0e18966e27e51dc0ac84b42e491e10a6dd476ba705f341acb8ad26cf01a2",
+      "initCodeHash": "0x7a4269ca4a3d17b5260e0abfa8a7b9e98866762ef393c4a337761612b054f01a",
+      "artifact": "StockdealerRewardVault"
+    },
+    {
+      "label": "Vault_NVDA",
+      "address": "0xc52EBe0C7A4761A3Bb2f3C592a1B9cf7cE92Ea78",
+      "salt": "0x1959f88c024ebac17983e55f628475c02c97457e78639c45178b61456d9925f2",
+      "initCodeHash": "0x88ef57dd2522f9e2de3abaf7811d05f45e3586e3ae54f94cf2d2e7ce866a505d",
+      "artifact": "StockdealerRewardVault"
+    },
+    {
+      "label": "Vault_QQQ",
+      "address": "0x9D33Ef8Bb1BCc49b94a4a59057496554776F2375",
+      "salt": "0x7fd0fa81382db2e561c11cceea7bd8556cde37007009d6fbff74704ea10a54f2",
+      "initCodeHash": "0xb14b9d54be562b6192f71635deb7f6a528a0523e9e423ff3ffdb345681fdb848",
+      "artifact": "StockdealerRewardVault"
+    },
+    {
+      "label": "Vault_TSLA",
+      "address": "0xfb23e767DA1028C7f826A3a996fA236A8b998508",
+      "salt": "0x4334e53eb780289063cad05dafe84020932a7286b85b896bea3a6c8e6ccca262",
+      "initCodeHash": "0xc477a03f4653b1e7fa2b72c817593ab0aaf8c9ecf9a0e910563a6e7d2ab09e3f",
+      "artifact": "StockdealerRewardVault"
+    },
+    {
+      "label": "GameCore",
+      "address": "0x64197c37A98cfCA6d39a48E02029F75f407E68f8",
+      "salt": "0xc97fc2342e23aed9bab934edb43b42d96c74447d252d07531212701b6dc60b10",
+      "initCodeHash": "0x610194faed4415db761f7a1ffb4e5cea49ce108617296f04a8dbcaba62fb2659",
+      "artifact": "StockdealerGameCoreV4"
+    }
+  ],
+  "totalSimulatedGas": "17445098",
+  "blockGasLimit": "1125899906842624",
+  "batchFile": "C:\\Users\\nacho\\Desktop\\Robinweed\\deployments\\stockdealer-mainnet-foundation-v4-safe-batch.json"
+}

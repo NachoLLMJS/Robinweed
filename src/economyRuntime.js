@@ -27,6 +27,7 @@ const explicitWalletRejection = error => error?.code === 4001 || error?.code ===
 
 function validateConfig(config) {
   if (config?.chainId !== 4663 || typeof config.economyActive !== 'boolean' || !Array.isArray(config.contracts)) throw new Error('INVALID_ECONOMY_CONFIG');
+  if (!['onchain', 'visual'].includes(config.wateringMode ?? 'onchain')) throw new Error('INVALID_WATERING_MODE');
   if (config.economyActive) {
     getAddress(config.currency);
     if (!Array.isArray(config.houseBasketSymbols) || config.houseBasketSymbols.length !== SYMBOLS.length || !config.houseBasketSymbols.every((symbol, index) => symbol === SYMBOLS[index])) throw new Error('INCOMPLETE_HOUSE_BASKET');
