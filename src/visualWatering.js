@@ -8,13 +8,25 @@ export function beginVisualWatering(potIndex, startedAt = performance.now()) {
   return Object.freeze({ potIndex, startedAt, heldMs: 0, progress: 0, complete: false });
 }
 
+export function beginDisplayWatering(displayId, startedAt = performance.now()) {
+  if (typeof displayId !== 'string' || !/^DISPLAY-[AB]-L[1-3]-P[1-3]$/.test(displayId)) {
+    throw new TypeError('Invalid decorative display target');
+  }
+  return Object.freeze({ displayId, startedAt, heldMs: 0, progress: 0, complete: false });
+}
+
 export function advanceVisualWatering(session, wallDeltaMs) {
-  if (!session || !Number.isSafeInteger(session.potIndex)) throw new TypeError('Invalid visual watering session');
+  const target = Number.isSafeInteger(session?.potIndex)
+    ? { potIndex: session.potIndex }
+    : typeof session?.displayId === 'string' && /^DISPLAY-[AB]-L[1-3]-P[1-3]$/.test(session.displayId)
+      ? { displayId: session.displayId }
+      : null;
+  if (!target) throw new TypeError('Invalid visual watering session');
   const delta = Number.isFinite(wallDeltaMs) ? Math.max(0, wallDeltaMs) : 0;
   const heldMs = Math.min(VISUAL_WATER_HOLD_MS, session.heldMs + delta);
   const progress = heldMs / VISUAL_WATER_HOLD_MS;
   return Object.freeze({
-    potIndex: session.potIndex,
+    ...target,
     startedAt: session.startedAt,
     heldMs,
     progress,

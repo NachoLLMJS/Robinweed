@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   VISUAL_WATER_HOLD_MS,
+  beginDisplayWatering,
   beginVisualWatering,
   advanceVisualWatering,
   visualWaterDrops,
@@ -16,6 +17,17 @@ test('visual watering exposes presentation state only and clamps at completion',
   assert.equal(done.progress, 1);
   assert.equal(done.complete, true);
   for (const forbidden of ['moisture', 'wateredAt', 'stage', 'quality', 'reward', 'care']) {
+    assert.equal(forbidden in done, false);
+  }
+});
+
+test('decorative display watering carries only an ephemeral visual target', () => {
+  const started = beginDisplayWatering('DISPLAY-A-L1-P2', 250);
+  const done = advanceVisualWatering(started, VISUAL_WATER_HOLD_MS);
+  assert.deepEqual(Object.keys(done).sort(), ['complete', 'displayId', 'heldMs', 'progress', 'startedAt']);
+  assert.equal(done.displayId, 'DISPLAY-A-L1-P2');
+  assert.equal(done.complete, true);
+  for (const forbidden of ['plotId', 'potIndex', 'moisture', 'wateredAt', 'reward', 'inventory']) {
     assert.equal(forbidden in done, false);
   }
 });

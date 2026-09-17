@@ -16,8 +16,11 @@ test('warehouse display shelving is two purely decorative banks with eighteen pl
   const plants = displayPlantPlacements();
   assert.equal(plants.length, 18);
   assert.ok(plants.every(plant => plant.decorative === true));
-  assert.ok(plants.every(plant => plant.onchainPlotId === null));
+  assert.ok(plants.every(plant => !('plotId' in plant) && !('onchainPlotId' in plant)));
   assert.ok(plants.every(plant => !('growth' in plant) && !('water' in plant) && !('seedTicker' in plant)));
+  assert.equal(new Set(plants.map(plant => plant.displayId)).size, 18);
+  assert.ok(plants.every(plant => /^DISPLAY-[AB]-L[1-3]-P[1-3]$/.test(plant.displayId)));
+  assert.ok(plants.every(plant => plant.position[1] === plant.supportY));
 });
 
 test('display shelves remain outside every canonical V4 warehouse plot', () => {
@@ -33,4 +36,13 @@ test('display shelf geometry has no cultivation interaction or persistence path'
   assert.ok(pieces.every(piece => piece.decorative === true));
   assert.match(main, /displayPlantPlacements\(\)/);
   assert.doesNotMatch(main, /displayShelf[^\n]*(?:userData\.interactive|pots\.push|localStorage|executeCultivationAction)/i);
+});
+
+test('display plants use their own visual raycast and local shelf lighting', () => {
+  assert.match(main, /type:'displayPlant'/);
+  assert.match(main, /beginDisplayWatering\(display\.displayId/);
+  assert.match(main, /displayPlantHits/);
+  assert.match(main, /new THREE\.PointLight/);
+  const displayWatering = main.slice(main.indexOf('function startDisplayWatering'), main.indexOf('async function useOnchainTool'));
+  assert.doesNotMatch(displayWatering, /plotId|waterPlant|Object\.assign|executeCultivationAction|localStorage/);
 });

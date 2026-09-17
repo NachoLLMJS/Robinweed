@@ -58,11 +58,12 @@ export function displayPlantPlacements() {
       for (let slot = 0; slot < 3; slot += 1) {
         const t = (slot + 1) / 4;
         placements.push(freeze({
+          displayId: `${bank.id}-L${shelf + 1}-P${slot + 1}`,
           decorative: true,
-          onchainPlotId: null,
           bank: bank.id,
           shelf,
           slot,
+          supportY: shelfY,
           stage: 2 + ((placements.length + shelf) % 4),
           scale: 0.34,
           position: freeze([
