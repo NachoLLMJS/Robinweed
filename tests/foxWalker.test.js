@@ -19,7 +19,7 @@ function glbJson(relativePath) {
 test('fox walker uses a versioned Meshy Casual_Walk GLB on a safe sidewalk patrol', () => {
   assert.equal(ASSET_URLS.street.foxWalker, '/models-v30/characters/fox-walk.glb?v=1');
   assert.deepEqual(STREET_LAYOUT.foxWalker, {
-    x: -4.45, minZ: 42, maxZ: 96, height: 1.8, speed: 1.05,
+    x: -4.45, minZ: 42, maxZ: 96, height: 1.8, speed: 1.05, groundY: 0.12,
   });
   const reversed = advancePatrol({ distance: 95.9, direction: 1 }, 1, 42, 96, 1.05);
   assert.deepEqual(reversed, { distance: 96, direction: -1 });

@@ -55,12 +55,16 @@ test('approved warehouse props and complete city buildings use versioned GLBs', 
     cityPackCommercialTower: '/models-v21/city-pack/commercial-tower.glb?v=1',
     cityPackCommercialPurple: '/models-v21/city-pack/commercial-purple.glb?v=1',
     cityPackDiner: '/models-v21/city-pack/diner.glb?v=1',
+    cornerShop: '/models-v41/city/corner-shop.glb',
+    cornerCafe: '/models-v41/city/corner-cafe.glb',
     restaurant: '/models-v17/city/restaurant.glb',
     restaurantInterior: '/models-v17/interiors/restaurant-in-the-evening.glb',
   });
   assert.equal(ASSET_URLS.items.seedPack, '/models-v7/items/robinhood-seed-pack-clean.glb');
   assert.equal(ASSET_URLS.textures.growthDiagram, '/textures/warehouse/pizarra.png?v=1');
   assert.equal(ASSET_URLS.branding.mark, '/brands/robinhood-chain-mark.svg');
+  assert.equal(Object.keys(ASSET_URLS.dressing).length, 18);
+  assert.equal(ASSET_URLS.dressing.bench, '/models-v40/dressing/bench.glb');
 });
 
 test('warehouse wall logo is a versioned square RGBA PNG', () => {

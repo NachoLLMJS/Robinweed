@@ -31,7 +31,8 @@ test('a house interior uses the active owned property capacity', () => {
 });
 
 test('receipt confirmation never grants local property ownership before authoritative state refresh', () => {
-  const wholeAction = main.slice(main.indexOf('async function usePropertyAction()'), main.indexOf('\n\nfunction refresh()', main.indexOf('async function usePropertyAction()')));
+  const actionStart = main.indexOf('async function usePropertyAction()');
+  const wholeAction = main.slice(actionStart, main.indexOf('function refresh()', actionStart));
   const purchaseAction = wholeAction.slice(wholeAction.indexOf("ui.propertyAction.textContent='PREPARING HOUSE QUOTE…'"));
   assert.doesNotMatch(purchaseAction, /state\.properties\.set\(/);
   assert.match(purchaseAction, /await refreshOnchainState\(\)/);

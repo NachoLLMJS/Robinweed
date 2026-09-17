@@ -96,8 +96,12 @@ export const STREET_LAYOUT = Object.freeze({
   furniture: Object.freeze({ x: -10.5, z: 10.5, height: 1.8, rotationY: Math.PI / 2 }),
   neighborOlder: Object.freeze({ x: 5.15, z: 25.25, height: 1.72, rotationY: -Math.PI / 2 }),
   househead: Object.freeze({ x: -5.1, z: 18.15, height: 1.55, rotationY: Math.PI / 2 }),
-  foxWalker: Object.freeze({ x: -4.45, minZ: 42, maxZ: 96, height: 1.8, speed: 1.05 }),
-  neonCatWalker: Object.freeze({ x: 4.45, minZ: 55.5, maxZ: 66.8, height: 1.8, speed: .95 }),
+  // groundY 0,12: los dos caminan por la vereda, cuyo tope es 0,12 (box([1.8,.16,..],..,[x,.04,..]) en main.js). Sin
+  // el campo, loadStreetSet los apoyaba en el 0,08 por defecto y llevaban los pies 4 cm dentro del pavimento (medido
+  // el 2026-09-13 por el refutador de jugabilidad). Siguen por |x| 4,45 porque el farol (poste en |x| 4,92) no deja
+  // correrlos mas afuera: el flanco roza el cordon de piedra, un pie sobre el cordon es un peaton normal.
+  foxWalker: Object.freeze({ x: -4.45, minZ: 42, maxZ: 96, height: 1.8, speed: 1.05, groundY: .12 }),
+  neonCatWalker: Object.freeze({ x: 4.45, minZ: 55.5, maxZ: 66.8, height: 1.8, speed: .95, groundY: .12 }),
   cat: Object.freeze({ x: -5.08, z: 22.35, height: 0.52, rotationY: .35 }),
   obstacles: freezePoints([
     { minX: 4.55, maxX: 5.95, minZ: 8.85, maxZ: 10.45 },
@@ -174,3 +178,136 @@ export function advancePatrol(state, dt, min, max, speed) {
   if (distance <= min) { distance = min; direction = 1; }
   return { distance, direction };
 }
+
+// Igual que advancePatrol pero con una pausa en cada punta: un peaton que se
+// detiene unos segundos antes de darse vuelta se lee como persona, no como bot.
+export function advanceStrollPatrol(state, dt, min, max, speed, dwellSeconds = 0) {
+  const step = Math.max(0, dt);
+  if (state.dwell > 0) {
+    return {
+      distance: state.distance,
+      direction: state.direction,
+      dwell: Math.max(0, state.dwell - step),
+      moving: false,
+    };
+  }
+  let distance = state.distance + state.direction * speed * step;
+  let direction = state.direction;
+  let dwell = 0;
+  if (distance >= max) { distance = max; direction = -1; dwell = dwellSeconds; }
+  if (distance <= min) { distance = min; direction = 1; dwell = dwellSeconds; }
+  return { distance, direction, dwell, moving: dwell === 0 };
+}
+
+// --- La van: cuerpo medido, rampa del acelerador y paradas por (cruce, sentido) -----------------------------------
+// C2 (2026-09-14, CF-01 + CF-02 / T48-H2). Las paradas derivadas (VAN_TRAFFIC_STOPS) viven en vanStopState.js porque
+// necesitan las cebras de crossingState, y crossingState importa STREET_LAYOUT de aca: importarlo desde este modulo
+// seria un ciclo con un const sin inicializar (TDZ) al cargar main.js. Aca queda lo puro.
+
+// Medido del GLB (public/models-v9/street/delivery-van.glb): un nodo con escala uniforme 0,5 y POSITION normalizada
+// (SHORT) de +-32767 x +-24062 x +-21118; loadStreetSet -> normalizeAsset escala height/alto (uniforme), asi que
+// largo = 2,25 x 32767/24062 = 3,064 sobre el x del GLB y ancho = 1,975 sobre su z. El wrapper gira rotationY +-pi/2
+// sobre la avenida (advanceVehicleRoute, modelHeading), asi que el LARGO cae sobre el z de la calle.
+// tests/vanStops.test.js lo re-mide del GLB.
+export const VAN_BODY = Object.freeze({ length: 3.064, width: 1.975 });
+
+// La rampa LINEAL del acelerador (T48): 0 exacto en 1/2,6 = 0,38 s, 1 en 1/1,6 = 0,63 s. Un lerp nunca llega a 0 y la
+// van se arrastraria durante la espera. Vivia inline en main.js; aca porque vanBrakingDistance la necesita.
+export const VAN_THROTTLE_RAMP = Object.freeze({ brake: 2.6, release: 1.6 });
+export function advanceVanThrottle(throttle, braking, dt, ramp = VAN_THROTTLE_RAMP) {
+  const step = Math.max(0, dt);
+  return braking ? Math.max(0, throttle - step * ramp.brake) : Math.min(1, throttle + step * ramp.release);
+}
+
+// Lo que rueda la van desde que el acelerador empieza a bajar hasta que llega a 0: v * (1/brake) / 2 = 2,4/5,2 = 0,4615.
+export function vanBrakingDistance(speed = STREET_LAYOUT.van.speed, ramp = VAN_THROTTLE_RAMP) {
+  return speed / (2 * ramp.brake);
+}
+
+// +1 si el tramo actual de la ruta va al norte (z creciente), -1 al sur, 0 en los laterales (z 12 y z 107).
+export function vanTravelDir(routeState, route = STREET_LAYOUT.vehicleRoute) {
+  const segment = (((routeState.segment ?? 0) % route.length) + route.length) % route.length;
+  return Math.sign(route[(segment + 1) % route.length].z - route[segment].z);
+}
+
+// Cuanto aire queda entre el morro y la primera raya de la cebra.
+export const VAN_STOP_MARGIN = 0.3;
+const r4 = n => +n.toFixed(4);
+
+// Una LINEA DE PARADA POR (cruce, sentido). `crossings` son las franjas que la van atraviesa ({ id, minZ, maxZ,
+// holdSeconds }: rayas + lo que haya entre ellas). Yendo al norte el morro (centro + L/2) queda `margin` antes de
+// minZ; yendo al sur el morro (centro - L/2) queda `margin` despues de maxZ. `arm` es donde el acelerador empieza a
+// bajar (una distancia de frenado antes de la linea) para que la van se detenga EN la linea, no pasada.
+// La linea solo existe si algun tramo de la ruta en ese sentido la alcanza desde atras (arranca antes de `arm` y
+// termina despues de `z`): la ruta arranca en z 12, ENCIMA del cruce del galpon, asi que su linea norte (9,318) no
+// es un cruce que se atraviese y no se emite. Orden: como se recorren desde el arranque de la ruta.
+export function vanStopLines(crossings, length = VAN_BODY.length, options = {}) {
+  const { margin = VAN_STOP_MARGIN, route = STREET_LAYOUT.vehicleRoute, speed = STREET_LAYOUT.van.speed, ramp = VAN_THROTTLE_RAMP } = options;
+  const brake = vanBrakingDistance(speed, ramp);
+  const half = length / 2;
+  const legs = route.map((start, i) => ({ start, end: route[(i + 1) % route.length] }));
+  const lines = [];
+  for (const crossing of crossings) {
+    for (const dir of [1, -1]) {
+      const z = dir > 0 ? crossing.minZ - margin - half : crossing.maxZ + margin + half;
+      const arm = z - dir * brake;
+      const approached = legs.some(({ start, end }) => Math.sign(end.z - start.z) === dir
+        && (dir > 0 ? start.z <= arm && end.z >= z : start.z >= arm && end.z <= z));
+      if (!approached) continue;
+      lines.push(Object.freeze({ id: `${crossing.id}:${dir > 0 ? 'north' : 'south'}`, crossing: crossing.id, dir, z: r4(z), arm: r4(arm), holdSeconds: crossing.holdSeconds }));
+    }
+  }
+  const firstDir = legs.map(({ start, end }) => Math.sign(end.z - start.z)).find(d => d !== 0) ?? 1;
+  const order = stop => [stop.dir === firstDir ? 0 : 1, stop.dir * stop.z];
+  return Object.freeze(lines.sort((a, b) => {
+    const [ga, za] = order(a);
+    const [gb, zb] = order(b);
+    return ga - gb || za - zb;
+  }));
+}
+
+export function vanStopIdle() {
+  return { heading: 0, served: [], remaining: 0, throttle: 1 };
+}
+
+// Devuelve el acelerador 0/1 y sirve cada parada UNA vez por (cruce, sentido): `served` guarda los ids servidos y al
+// cambiar de sentido (dar la vuelta en un extremo) se limpian los del sentido nuevo, que eran de la vuelta anterior.
+// Antes `servedZ` era un solo z sin sentido que se re-armaba al salir de la zona: en la bocacalle funcionaba de
+// casualidad (la zona se salia entre ida y vuelta) y en el galpon no (la ruta gira dentro de la zona).
+export function advanceVanStop(state, dt, z, dir, stops) {
+  const step = Math.max(0, dt);
+  let heading = state.heading ?? 0;
+  let served = state.served ?? [];
+  if (dir !== 0 && dir !== heading) {
+    served = served.filter(id => !stops.some(stop => stop.id === id && stop.dir === dir));
+    heading = dir;
+  }
+  if (state.remaining > 0) {
+    const remaining = Math.max(0, state.remaining - step);
+    return { heading, served, remaining, throttle: remaining > 0 ? 0 : 1 };
+  }
+  // la primera linea (en orden de marcha) cuyo `arm` la van ya piso en su sentido y que no se sirvio en esta pasada
+  const due = dir === 0 ? null : stops
+    .filter(stop => stop.dir === dir && !served.includes(stop.id) && (dir > 0 ? z >= stop.arm : z <= stop.arm))
+    .sort((a, b) => dir * (a.z - b.z))[0] ?? null;
+  if (!due) return { heading, served, remaining: 0, throttle: 1 };
+  return { heading, served: [...served, due.id], remaining: Math.max(0, due.holdSeconds - step), throttle: 0 };
+}
+
+// Cuatro peatones extra sobre los dos que ya existian (foxWalker / neonCatWalker). Cada uno difiere en
+// carril, tramo, velocidad, pausa, escala, fase de animacion y tinte, para que la avenida no se lea como
+// dos clones yendo y viniendo.
+// Carril |x| 4,45 = el de los dos originales (paquete G verificado, C-08): las farolas de |x| 5,1 NO se mueven
+// (tienen collider PROP_FOOTPRINTS.lamp.post, el kit de vereda se coloca contra ellas y la ciudad decidio que
+// "un pie sobre el cordon es un peaton normal"). Flanco 4,45 + 0,35 = 4,80 contra la cara interna del poste
+// 5,1 - 0,176 = 4,924: 0,124 m de aire. Medido el 2026-09-14 contra dressingColliders(), propColliders() y
+// los colliders de ?isla con los presets por defecto: 0 cruces (tests/streetWalkers.test.js lo re-mide).
+// Tramos: ninguno comparte carril y tramo con el zorro (oeste 42..96) ni el gato (este 55,5..66,8) originales;
+// foxCommuter va por z 23,6..30,2 para no atravesar al househead (17,5..18,8) ni al gato sentado (22,1..22,6);
+// catDowntown frena en 22,2 antes del arbusto este (23,1) y del vecino mayor (24,7).
+export const STREET_WALKERS = Object.freeze([
+  Object.freeze({ key: 'foxCommuter', asset: 'foxWalker', lane: -4.45, minZ: 23.6, maxZ: 30.2, speed: 1.34, dwell: 1.6, scale: 0.92, phase: 0.45, tint: 0xffc2d8, tintAmount: 0.30 }),
+  Object.freeze({ key: 'foxUptown', asset: 'foxWalker', lane: 4.45, minZ: 71.4, maxZ: 97.6, speed: 0.82, dwell: 3.4, scale: 1.07, phase: 1.90, tint: 0xbfe0ff, tintAmount: 0.26 }),
+  Object.freeze({ key: 'catCrosstown', asset: 'neonCatWalker', lane: 4.45, minZ: 38.4, maxZ: 52.8, speed: 1.12, dwell: 2.1, scale: 0.95, phase: 1.20, tint: 0xffe08a, tintAmount: 0.34 }),
+  Object.freeze({ key: 'catDowntown', asset: 'neonCatWalker', lane: 4.45, minZ: 12.6, maxZ: 22.2, speed: 0.90, dwell: 2.8, scale: 1.04, phase: 0.70, tint: 0xc4ffd0, tintAmount: 0.28 }),
+]);

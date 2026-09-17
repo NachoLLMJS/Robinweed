@@ -19,7 +19,7 @@ function glbJson(relativePath) {
 test('image-generated neon cat patrols the opposite neighborhood sidewalk', () => {
   assert.equal(ASSET_URLS.street.neonCatWalker, '/models-v31/characters/neon-cat-walk.glb?v=1');
   assert.deepEqual(STREET_LAYOUT.neonCatWalker, {
-    x: 4.45, minZ: 55.5, maxZ: 66.8, height: 1.8, speed: 0.95,
+    x: 4.45, minZ: 55.5, maxZ: 66.8, height: 1.8, speed: 0.95, groundY: 0.12,
   });
   const reversed = advancePatrol({ distance: 55.6, direction: -1 }, 1, 55.5, 66.8, 0.95);
   assert.deepEqual(reversed, { distance: 55.5, direction: 1 });

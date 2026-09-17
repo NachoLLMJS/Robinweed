@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#99ff2e" />
+    <link rel="icon" href="data:," />
     <meta name="description" content="Stockdealer — a first-person low-poly cultivation game prototype for Robinhood Chain." />
     <title>STOCKDEALER</title>
   </head>
@@ -30,6 +31,9 @@
         </header>
         <div class="objective"><small>CURRENT JOB</small><strong id="objective">Plant a seed in an empty pot</strong></div>
         <div id="prompt" class="prompt"></div>
+        <div id="visualWateringGauge" class="visual-watering-gauge" role="progressbar" aria-label="Visual watering progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <b></b><small>HOLD TO WATER</small>
+        </div>
         <div class="crosshair"><i></i></div>
         <div id="toast" class="toast"></div>
         <div class="stats">
