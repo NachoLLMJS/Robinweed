@@ -6,7 +6,7 @@ import { MOON_RIG, moonOffset } from './moonShadowState.js';
 
 export const NIGHT_SKY = Object.freeze({
   moonDistance: 210,
-  moonRadius: 6.2,
+  moonRadius: 2.8,
   moonColor: 0xf6f2da,
   haloRadius: 26,
   haloTint: Object.freeze([176, 200, 255]),

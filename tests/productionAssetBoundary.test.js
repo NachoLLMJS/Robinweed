@@ -18,6 +18,15 @@ const source = [
   ...files(srcPath).filter(path => path.endsWith('.js')).map(path => readFileSync(path, 'utf8')),
 ].join('\n');
 const runtimeUrls = new Set([...source.matchAll(/["'`](\/(?:models(?:-v\d+)?|textures|brands|video)\/[^"'`?]+)(?:\?[^"'`]*)?["'`]/g)].map(match => match[1]));
+const TEXT_ASSET = /\.(?:css|html|js|json|md|svg|txt|xml)$/i;
+
+function assetDigest(path) {
+  const bytes = readFileSync(path);
+  const stableBytes = TEXT_ASSET.test(path)
+    ? Buffer.from(bytes.toString('utf8').replaceAll('\r\n', '\n'), 'utf8')
+    : bytes;
+  return createHash('sha256').update(stableBytes).digest('hex');
+}
 
 test('every root-relative runtime asset exists in public', () => {
   for (const url of runtimeUrls) assert.equal(statSync(join(publicPath, url.slice(1))).isFile(), true, url);
@@ -40,6 +49,6 @@ test('production styles do not import remote fonts blocked by the server CSP', (
 
 test('every published asset is pinned by an exact SHA-256 allowlist', () => {
   const manifest = JSON.parse(readFileSync(new URL('../config/public-assets.sha256.json', import.meta.url), 'utf8'));
-  const actual = Object.fromEntries(files(publicPath).map(path => [relative(publicPath, path).replaceAll('\\', '/'), createHash('sha256').update(readFileSync(path)).digest('hex')]));
+  const actual = Object.fromEntries(files(publicPath).map(path => [relative(publicPath, path).replaceAll('\\', '/'), assetDigest(path)]));
   assert.deepEqual(actual, manifest);
 });
