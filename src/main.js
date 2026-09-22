@@ -352,7 +352,12 @@ const growConeMat=new THREE.MeshBasicMaterial({color:growRig.color,map:growShaft
 const growPanelMat=new THREE.MeshBasicMaterial({color:growRig.glassEmissive,toneMapped:false});
 const growCones=[],growPanels=[];
 const growStationPositions=[];
-const growPool=[];for(let i=0;i<SPOT_BUDGET.slots;i++){const s=new THREE.SpotLight(growRig.color,0,growRig.distance,growRig.angle,growRig.penumbra,growRig.decay);s.position.set(SPOT_BUDGET.parkAt.x,SPOT_BUDGET.parkAt.y,SPOT_BUDGET.parkAt.z);s.target.position.set(SPOT_BUDGET.parkAt.x,SPOT_BUDGET.parkAt.y-1,SPOT_BUDGET.parkAt.z);scene.add(s);scene.add(s.target);growPool.push(s);}
+const growPool=[];for(let i=0;i<SPOT_BUDGET.slots;i++){const s=new THREE.SpotLight(0xffffff,0,10.5,1.08,.82,1.45);s.position.set(SPOT_BUDGET.parkAt.x,SPOT_BUDGET.parkAt.y,SPOT_BUDGET.parkAt.z);s.target.position.set(SPOT_BUDGET.parkAt.x,SPOT_BUDGET.parkAt.y-1,SPOT_BUDGET.parkAt.z);scene.add(s);scene.add(s.target);growPool.push(s);}
+// The ceiling panels are emissive meshes, but emissive materials do not illuminate other
+// objects. Reuse the fixed four-spot pool as broad white ceiling lights instead of adding
+// one light per panel or changing the compiled light budget.
+const CEILING_ROOM_LIGHTS=[[-4.2,3.72,-3.4],[4.2,3.72,-3.4],[-4.2,3.72,2.3],[4.2,3.72,2.3]];
+function updateCeilingRoomLights(){const on=state.location==='warehouse';growPool.forEach((light,index)=>{const [x,y,z]=CEILING_ROOM_LIGHTS[index];light.position.set(x,y,z);light.target.position.set(x,.15,z);light.intensity=on?12:0;});}
 let growSlots=null;
 const lightFixtureFallback=[];
 const suspensionMaterial=new THREE.MeshStandardMaterial({color:0xaeb6ad,roughness:.52,metalness:.62});
@@ -1373,6 +1378,7 @@ function animate(now){requestAnimationFrame(animate);const dt=Math.min(.04,(now-
   streetMixers.forEach(mixer=>mixer.update(dt));
   if(state.location==='warehouse')vendor.rotation.y=vendorYawTowardPlayer(vendor.position,camera.position);
   if(vendorMixer)vendorMixer.update(dt);
+  updateCeilingRoomLights();
   updateNear();renderer.render(scene,camera);
 }
 refresh();animate(performance.now());
