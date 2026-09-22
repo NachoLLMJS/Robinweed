@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { WAREHOUSE_GROW_STATIONS, stationCollider } from '../src/warehouseExpansionState.js';
+import { WAREHOUSE_GROW_STATIONS, WAREHOUSE_DECOR, stationCollider } from '../src/warehouseExpansionState.js';
 import {
   DISPLAY_SHELF_BANKS,
   displayShelfPieces,
@@ -28,6 +28,12 @@ test('display shelves remain outside every canonical V4 warehouse plot', () => {
   for (const bank of DISPLAY_SHELF_BANKS) {
     assert.ok(stationColliders.every(collider => !overlaps(bank.collider, collider)));
   }
+});
+
+test('display shelf leaves a player-width passage to the hydroponic tower', () => {
+  const shelf = DISPLAY_SHELF_BANKS.find(bank => bank.id === 'DISPLAY-B').collider;
+  const tower = WAREHOUSE_DECOR.hydroponicTower.collider;
+  assert.ok(tower.minZ - shelf.maxZ >= 0.56, 'the passage must fit the player radius on both sides');
 });
 
 test('display shelf geometry has no cultivation interaction or persistence path', () => {

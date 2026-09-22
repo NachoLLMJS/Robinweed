@@ -15,7 +15,8 @@ export const DISPLAY_SHELF_BANKS = freeze([
   freeze({
     id: 'DISPLAY-B',
     center: freeze([2.6, 0, 4.1]),
-    collider: freeze({ minX: 1.4, maxX: 3.8, minZ: 3.75, maxZ: 4.45 }),
+    // Leave a real player-width passage to the hydroponic tower; the visible shelf still reaches 4.45.
+    collider: freeze({ minX: 1.4, maxX: 3.8, minZ: 3.75, maxZ: 4.34 }),
   }),
 ]);
 
