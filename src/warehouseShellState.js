@@ -121,7 +121,9 @@ export function wallSkinRepeat(lengthMetres, heightMetres = 4.2, skin = WALL_SKI
 const PANEL_ROWS_Z = [-5.5, -3.4, 2.3, 5.5];
 const PANEL_COLS_X = [-4.2, 0, 4.2];
 const HALL_PANEL = Object.freeze({ color: 0xfff4d2, emissive: 0xffdca0, emissiveIntensity: 1.6 });
-const GROW_PANEL = Object.freeze({ color: 0x9aa7b8, emissive: 0x5d6b7c, emissiveIntensity: .35 });
+// Los cuadrados del techo son difusores: deben leerse como paneles blancos encendidos,
+// no como placas azul-gris apagadas contra el techo negro.
+const GROW_PANEL = Object.freeze({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.4 });
 
 // El motor no tiene luz de rebote y las unicas luces del cuarto miran hacia ABAJO desde y 3.72, asi
 // que medido en GPU real el techo entero daba luma media 14 sobre 255: vigas, bandejas y conductos

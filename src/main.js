@@ -455,7 +455,9 @@ galponSkins.push({apply(on){ceiling.material=on?ceilingDeckMaterial:ceilingLegac
 const ceilingSteelMaterial=new THREE.MeshStandardMaterial({color:new THREE.Color(CEILING_KIT.steel.color),emissive:new THREE.Color(CEILING_KIT.steel.emissive),emissiveIntensity:CEILING_KIT.steel.emissiveIntensity,roughness:CEILING_KIT.steel.roughness,metalness:CEILING_KIT.steel.metalness});
 const airRunMaterial=new THREE.MeshStandardMaterial({color:new THREE.Color(CEILING_KIT.airRuns[0].color),emissive:new THREE.Color(CEILING_KIT.airRuns[0].emissive),emissiveIntensity:CEILING_KIT.airRuns[0].emissiveIntensity,roughness:.66,metalness:.24});
 const cableTrayMaterial=new THREE.MeshStandardMaterial({color:new THREE.Color(CEILING_KIT.cableTrays[0].color),emissive:new THREE.Color(CEILING_KIT.cableTrays[0].emissive),emissiveIntensity:CEILING_KIT.cableTrays[0].emissiveIntensity,roughness:.78,metalness:.2});
-const growPanelMaterial=new THREE.MeshStandardMaterial({color:0x9aa7b8,emissive:0x5d6b7c,emissiveIntensity:.35,roughness:.42});
+// Ceiling grow panels are white light diffusers. Their emissive surface keeps them
+// visibly white even when the warehouse is in the dark/night lighting preset.
+const growPanelMaterial=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:2.4,roughness:.42});
 for(const beam of CEILING_KIT.beams){galponCeilingBox(beam.size,ceilingSteelMaterial,[0,beam.y,beam.z]);galponCeilingBox(beam.flange,ceilingSteelMaterial,[0,beam.y-beam.size[1]/2-beam.flange[1]/2,beam.z]);}
 for(const run of CEILING_KIT.airRuns){const duct=galponCeilingMesh(new THREE.CylinderGeometry(run.radius,run.radius,run.length,10),airRunMaterial,[run.x,run.y,0]);duct.rotation.x=Math.PI/2;for(const z of run.diffusersAtZ)galponCeilingBox(CEILING_KIT.diffuser.size,ceilingSteelMaterial,[run.x,run.y-run.radius-CEILING_KIT.diffuser.drop/2,z]);}
 for(const tray of CEILING_KIT.cableTrays)galponCeilingBox(tray.size,cableTrayMaterial,[tray.x,tray.y,tray.z]);
