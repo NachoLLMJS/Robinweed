@@ -17,7 +17,7 @@ test('loader uses the supplied trailer and exposes game and spectator choices',(
   const source=fs.readFileSync(path.join(root,'src/main.js'),'utf8');
   assert.match(html,/stockdealer-corridor-trailer\.mp4/);
   assert.match(html,/id="play"[^>]*>ENTER THE GAME/);
-  assert.match(html,/id="spectate"[^>]*>PLAY OFFCHAIN DEMO/);
+  assert.match(html,/id="spectate"[^>]*>SPECTATOR MODE/);
   assert.match(source,/trailerButtonsVisible/);
   assert.match(source,/beginSession\('spectator'\)/);
   assert.match(source,/createSpectatorSession\(\)/);
