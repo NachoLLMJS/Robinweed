@@ -21,7 +21,7 @@ test('no visual dev panel is shipped to players', () => {
   assert.doesNotMatch(html, /sdLightPanel|light-panel/);
 });
 
-test('active onchain economy cannot advance plants from the local clock', () => {
-  assert.match(main, /pots\.forEach\(p=>\{if\(!economyConfig\.economyActive\)\{const next=advancePlant\(p\)/);
+test('active onchain player economy cannot advance plants from the local clock', () => {
+  assert.match(main, /pots\.forEach\(p=>\{if\(state\.mode==='spectator'\|\|!economyConfig\.economyActive\)\{const next=advancePlant\(p\)/);
   assert.doesNotMatch(main, /pots\.forEach\(p=>\{const next=advancePlant\(p\)/);
 });
