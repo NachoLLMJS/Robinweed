@@ -18,6 +18,16 @@ test('warehouse right wall uses the supplied transparent logo directly as a deca
   assert.doesNotMatch(main, /wallLogoFrame|wallLogoContainer|wallLogoBacking/);
 });
 
+test('warehouse left wall mounts the supplied animated GIF as an emissive screen', () => {
+  assert.equal(ASSET_URLS.textures.warehouseWallScreen, '/textures/warehouse/elon-musk-marijuana.gif?v=1');
+  assert.equal(ASSET_URLS.textures.warehouseWallScreenVideo, '/textures/warehouse/elon-musk-marijuana-loop.mp4?v=1');
+  assert.match(main, /ASSET_URLS\.textures\.warehouseWallScreen/);
+  assert.match(main, /new THREE\.VideoTexture\(warehouseWallScreenVideo\)/);
+  assert.match(main, /warehouseWallScreenVideo\.loop=true/);
+  assert.match(main, /WAREHOUSE_DECOR\.wallScreen\.position/);
+  assert.match(main, /legacyWarehouseShell\.push\(warehouseWallScreenFrame,warehouseWallScreen\)/);
+});
+
 test('warehouse expansion includes the supplied versioned hydroponic tower without the removed gray duct', () => {
   assert.equal(ASSET_URLS.warehouse.soilPallet, '/models-v33/warehouse/soil-pallet.glb?v=1');
   assert.equal('hvacDuct' in ASSET_URLS.warehouse, false);

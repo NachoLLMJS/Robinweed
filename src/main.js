@@ -410,6 +410,35 @@ warehouseWallLogo.rotation.y=WAREHOUSE_DECOR.wallLogo.rotationY;
 warehouseWallLogo.renderOrder=2;
 scene.add(warehouseWallLogo);
 legacyWarehouseShell.push(warehouseWallLogo);
+
+// The supplied GIF runs as a wall-mounted screen on the clear section of the left wall.
+// Browsers do not reliably advance a GIF uploaded through TextureLoader, so the screen uses a
+// frame-for-frame local MP4 derivative while retaining the original GIF as its loading fallback.
+const warehouseWallScreenFallbackTexture=new THREE.TextureLoader().load(ASSET_URLS.textures.warehouseWallScreen);
+warehouseWallScreenFallbackTexture.colorSpace=THREE.SRGBColorSpace;
+const warehouseWallScreenVideo=document.createElement('video');
+warehouseWallScreenVideo.src=ASSET_URLS.textures.warehouseWallScreenVideo;
+warehouseWallScreenVideo.muted=true;warehouseWallScreenVideo.loop=true;warehouseWallScreenVideo.playsInline=true;warehouseWallScreenVideo.preload='auto';
+warehouseWallScreenVideo.setAttribute('aria-hidden','true');warehouseWallScreenVideo.style.cssText='position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none';document.body.append(warehouseWallScreenVideo);
+const warehouseWallScreenTexture=new THREE.VideoTexture(warehouseWallScreenVideo);
+warehouseWallScreenTexture.colorSpace=THREE.SRGBColorSpace;warehouseWallScreenTexture.generateMipmaps=false;warehouseWallScreenTexture.minFilter=THREE.LinearFilter;warehouseWallScreenTexture.magFilter=THREE.LinearFilter;
+const warehouseWallScreenMaterial=new THREE.MeshBasicMaterial({map:warehouseWallScreenFallbackTexture,toneMapped:false});
+warehouseWallScreenVideo.addEventListener('canplay',()=>{warehouseWallScreenVideo.play().then(()=>{warehouseWallScreenMaterial.map=warehouseWallScreenTexture;warehouseWallScreenMaterial.needsUpdate=true;}).catch(()=>{});},{once:true});
+warehouseWallScreenVideo.load();
+const warehouseWallScreenFrame=new THREE.Mesh(
+  new THREE.BoxGeometry(.12,WAREHOUSE_DECOR.wallScreen.size[1]+.28,WAREHOUSE_DECOR.wallScreen.size[0]+.28),
+  new THREE.MeshStandardMaterial({color:0x090b0a,roughness:.38,metalness:.68}),
+);
+warehouseWallScreenFrame.position.set(...WAREHOUSE_DECOR.wallScreen.position);
+const warehouseWallScreen=new THREE.Mesh(
+  new THREE.PlaneGeometry(WAREHOUSE_DECOR.wallScreen.size[0],WAREHOUSE_DECOR.wallScreen.size[1]),
+  warehouseWallScreenMaterial,
+);
+warehouseWallScreen.position.set(WAREHOUSE_DECOR.wallScreen.position[0]+.066,WAREHOUSE_DECOR.wallScreen.position[1],WAREHOUSE_DECOR.wallScreen.position[2]);
+warehouseWallScreen.rotation.y=WAREHOUSE_DECOR.wallScreen.rotationY;
+warehouseWallScreen.renderOrder=2;
+scene.add(warehouseWallScreenFrame,warehouseWallScreen);
+legacyWarehouseShell.push(warehouseWallScreenFrame,warehouseWallScreen);
 // K: el recinto propio del galpon. Todo lo de aca vive en legacyWarehouseShell (oculto desde la calle) y
 // es una propiedad de runtime, asi que setGalpon(0) devuelve el cuarto de hoy exacto: piso en -.13 con
 // mats.floor, sin placa y sin linea. La linea amarilla de circulacion es geometria de MUNDO, no textura:

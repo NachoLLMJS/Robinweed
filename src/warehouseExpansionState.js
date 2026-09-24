@@ -31,6 +31,11 @@ export const WAREHOUSE_DECOR = Object.freeze({
     size: Object.freeze([2.75, 2.75]),
     rotationY: -Math.PI / 2,
   }),
+  wallScreen: Object.freeze({
+    position: Object.freeze([-6.78, 2.25, 3.05]),
+    size: Object.freeze([2.9, 1.643]),
+    rotationY: Math.PI / 2,
+  }),
   airConditioner: Object.freeze({ position: Object.freeze([-6.67, 2.35, 5.05]), targetHeight: .82, rotationY: Math.PI / 2 }),
   fans: Object.freeze([
     Object.freeze({ position: Object.freeze([-6.67, 2.35, -1.0]), targetHeight: 1.45, rotationY: Math.PI / 2 }),

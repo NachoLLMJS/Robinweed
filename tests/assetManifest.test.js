@@ -76,6 +76,15 @@ test('warehouse wall logo is a versioned square RGBA PNG', () => {
   assert.equal(png[25], 6, 'PNG color type must remain RGBA');
 });
 
+test('warehouse wall screen uses the supplied looping GIF', () => {
+  assert.equal(ASSET_URLS.textures.warehouseWallScreen, '/textures/warehouse/elon-musk-marijuana.gif?v=1');
+  assert.equal(ASSET_URLS.textures.warehouseWallScreenVideo, '/textures/warehouse/elon-musk-marijuana-loop.mp4?v=1');
+  const gif = readFileSync(new URL('../public/textures/warehouse/elon-musk-marijuana.gif', import.meta.url));
+  const video = readFileSync(new URL('../public/textures/warehouse/elon-musk-marijuana-loop.mp4', import.meta.url));
+  assert.equal(gif.subarray(0, 6).toString(), 'GIF89a');
+  assert.equal(video.subarray(4, 8).toString(), 'ftyp');
+});
+
 test('tokenized-stock seed packets use their approved versioned production GLBs', () => {
   assert.deepEqual(ASSET_URLS.items.stockSeedPacks, {
     MSFT: '/models-v26/items/stock-seed-packs/msft-seed-pack.glb?v=2',

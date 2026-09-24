@@ -73,6 +73,8 @@ export const ASSET_URLS = Object.freeze({
   textures: Object.freeze({
     growthDiagram: '/textures/warehouse/pizarra.png?v=1',
     warehouseWallLogo: '/textures/warehouse/the-stock-dealer-wall-logo.png?v=1',
+    warehouseWallScreen: '/textures/warehouse/elon-musk-marijuana.gif?v=1',
+    warehouseWallScreenVideo: '/textures/warehouse/elon-musk-marijuana-loop.mp4?v=1',
   }),
   branding: Object.freeze({
     mark: '/brands/robinhood-chain-mark.svg',
