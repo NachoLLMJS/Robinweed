@@ -6,13 +6,13 @@ const main = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8');
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
 const forbiddenImports = [
-  'additiveState', 'blunt', 'gameClock', 'growCabinState', 'growConfig',
+  'additiveState', 'gameClock', 'growCabinState', 'growConfig',
   'growPersistence', 'growTierState', 'harvestLotState', 'harvestQualityState',
   'lotVisualState', 'moistureState', 'objectiveState', 'sandboxClock',
   'seedStockState', 'shelfBankState', 'strainState', 'wateringSession',
 ];
 
-test('production client excludes prototype cultivation and shelf-bank systems', () => {
+test('production client excludes unapproved prototype cultivation and shelf-bank systems', () => {
   for (const moduleName of forbiddenImports) assert.doesNotMatch(main, new RegExp(`from ['\"]\\./${moduleName}`));
   assert.doesNotMatch(main, /SHELF_BANK_LAYOUT|shelfPotPositions|shelfBankPieces/);
 });

@@ -1,5 +1,6 @@
 const ONE_SHOT_KEYS = new Map([
   ['KeyE', { type: 'interact' }],
+  ['KeyF', { type: 'smoke-blunt' }],
 ]);
 
 const NUMERIC_SLOTS = new Map([
